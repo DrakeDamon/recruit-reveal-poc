@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@recruit/*": ["src/*"],
+      "@utils/*": ["src/utils/*"],
+      "@social/*": ["src/social/*"],
+      "@api/*": ["src/api/*"]
+    }
+  }
+}
