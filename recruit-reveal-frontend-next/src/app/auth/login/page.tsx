@@ -1,4 +1,6 @@
-import { useState } from 'react';
+'use client';
+
+import React, { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { Button, Form, Input } from 'antd';
 
@@ -7,22 +9,29 @@ export default function LoginPage() {
 
   const onFinish = async (values: { email: string; password: string }) => {
     setLoading(true);
-    // Use next-auth credentials provider
     await signIn('credentials', {
       email: values.email,
       password: values.password,
-      callbackUrl: '/',  // Redirect after successful login
+      callbackUrl: '/',
     });
     setLoading(false);
   };
 
   return (
     <Form onFinish={onFinish} layout="vertical">
-      <Form.Item name="email" label="Email" rules={[{ required: true, message: 'Email is required' }]}>
+      <Form.Item
+        name="email"
+        label="Email"
+        rules={[{ required: true, message: 'Email is required' }]}
+      >
         <Input type="email" placeholder="coach@example.com" />
       </Form.Item>
-      <Form.Item name="password" label="Password" rules={[{ required: true, message: 'Password is required' }]}>
-        <Input.Password placeholder="●●●●●●" />
+      <Form.Item
+        name="password"
+        label="Password"
+        rules={[{ required: true, message: 'Password is required' }]}
+      >
+        <Input.Password placeholder="••••••" />
       </Form.Item>
       <Button type="primary" htmlType="submit" loading={loading}>
         Sign in
