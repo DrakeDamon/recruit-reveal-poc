@@ -1,35 +1,31 @@
-import NextAuth from 'next-auth';
-import { type AuthOptions } from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
-import { PrismaAdapter } from '@next-auth/prisma-adapter';
-import { prisma } from '../../../../../lib/prisma'; // Adjust the import path as necessary
+// src/app/api/auth/register/route.ts
+import { NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
+import { prisma } from '../../../../../lib/prisma'; // Adjust the import path as necessary
 
-export const authOptions: AuthOptions = {
-  adapter: PrismaAdapter(prisma),
-  // cast 'jwt' to the correct literal type so TS doesn’t complain
-  session: { strategy: 'jwt' as const },
-  providers: [
-    CredentialsProvider({
-      name: 'Credentials',
-      credentials: {
-        email: { label: 'Email', type: 'email', placeholder: 'coach@example.com' },
-        password: { label: 'Password', type: 'password' },
-      },
-      async authorize(credentials) {
-        // credentials may be undefined; guard against that
-        if (!credentials) return null;
-        const { email, password } = credentials;
-        const user = await prisma.user.findUnique({ where: { email } });
-        if (!user) return null;
-        const valid = await bcrypt.compare(password, user.password_hash);
-        return valid ? { id: user.id, email: user.email } : null;
-      },
-    }),
-  ],
-  secret: process.env.NEXTAUTH_SECRET,
-};
+export async function POST(request: Request) {
+  const { email, password } = await request.json();
 
-// Export handlers for GET and POST
-const handler = NextAuth(authOptions);
-export { handler as GET, handler as POST };
+  if (!email || !password) {
+    return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
+  }
+
+  try {
+    // Check if user already exists
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) {
+      return NextResponse.json({ error: 'User already exists' }, { status: 409 });
+    }
+
+    const hashed = await bcrypt.hash(password, 10);
+    const user = await prisma.user.create({
+      data: { email, password_hash: hashed },
+    });
+
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+  }
+}
+
+
