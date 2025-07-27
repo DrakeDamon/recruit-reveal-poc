@@ -3,12 +3,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
-
 export async function POST(request: NextRequest) {
+  const prisma = new PrismaClient();  // Instantiated inside for safety
   try {
-    const body = await request.json();  // Parse as JSON
-    console.log('Parsed body:', body);  // Debug: Log the parsed JSON object
+    console.log('DATABASE_URL:', process.env.DATABASE_URL);  // Debug env
+    const body = await request.json();
+    console.log('Parsed body:', body);
 
     const { email, password } = body;
 
@@ -16,27 +16,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Missing email or password' }, { status: 400 });
     }
 
-    // Check if user exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       return NextResponse.json({ message: 'User already exists' }, { status: 409 });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
     const user = await prisma.user.create({
       data: {
         email,
-        password: hashedPassword,
+        password_hash: hashedPassword,  // Changed to match schema field
       },
     });
 
-    console.log('Created user:', user);  // Debug: Confirm creation
+    console.log('Created user:', user);
     return NextResponse.json({ message: 'User created successfully' }, { status: 201 });
   } catch (error) {
     console.error('Registration error:', error);
-    return NextResponse.json({ message: 'Internal server error: ' + (error.message || 'Unknown') }, { status: 500 });  // Include error for debugging
+    return NextResponse.json({ message: 'Internal server error: ' + (error.message || 'Unknown') }, { status: 500 });
+  } finally {
+    await prisma.$disconnect();  // Optional, but fine
   }
 }
