@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { Button, Form, Input, message } from 'antd';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
@@ -47,6 +48,17 @@ export default function LoginPage() {
           Sign in
         </Button>
       </Form>
+
+      {/* Signup link */}
+      <p className="mt-4 text-center">
+        Don’t have an account?{' '}
+        <Link
+          href="/auth/signup"
+          className="text-blue-600 hover:underline"
+        >
+          Sign up
+        </Link>
+      </p>
     </div>
   );
 }
