@@ -26,12 +26,7 @@ export default function Navbar() {
         {status === 'authenticated' && (
           <>
             <li>
-              <Link href="/dashboard" className="hover:underline">
-                Dashboard
-              </Link>
-            </li>
-            <li>
-              <Link href="/evaluate" className="hover:underline">
+              <Link href="/wizard" className="hover:underline">
                 Evaluate
               </Link>
             </li>
