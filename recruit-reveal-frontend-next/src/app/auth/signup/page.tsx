@@ -1,76 +1,54 @@
-// src/app/auth/signup/page.tsx
 'use client';
 
-import React, { useState } from 'react';
-import { Button, Form, Input, message } from 'antd';
+import { Form, Input, Button, message } from 'antd';
 import { useRouter } from 'next/navigation';
+import React from 'react';
 
-export default function SignupPage() {
-  const [loading, setLoading] = useState(false);
+const SignupPage: React.FC = () => {
   const router = useRouter();
+  const [form] = Form.useForm();
 
-  interface FormValues {
-    email: string;
-    password: string;
-    confirmPassword: string;
-  }
-
-  const onFinish = async (values: FormValues) => {
-    if (values.password !== values.confirmPassword) {
-      message.error('Passwords do not match');
-      return;
-    }
-    setLoading(true);
+  const onFinish = async (values: { email: string; password: string }) => {
     try {
-      const res = await fetch('/api/auth/register', {
+      const response = await fetch('/api/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: values.email, password: values.password }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
       });
-      if (res.ok) {
-        message.success('Account created! You can now log in.');
+
+      if (response.ok) {
+        message.success('Account created! Redirecting to login...');
         router.push('/auth/login');
       } else {
-        const data = await res.json();
-        message.error(data.error || 'Registration failed');
+        const errorData = await response.json();
+        message.error(errorData.message || 'Registration failed. Please try again.');
       }
-    } catch (err) {
-      message.error('Registration error');
+    } catch (error) {
+      console.error('Signup error:', error);
+      message.error('An unexpected error occurred.');
     }
-    setLoading(false);
   };
 
   return (
-    <div className="max-w-md mx-auto p-8">
-      <h1 className="text-2xl font-bold mb-4">Create an account</h1>
-      <Form onFinish={onFinish} layout="vertical">
-        <Form.Item
-          name="email"
-          label="Email"
-          rules={[{ required: true, message: 'Please enter your email' }]}
-        >
-          <Input type="email" placeholder="coach@example.com" />
+    <div style={{ maxWidth: 400, margin: 'auto', padding: '2rem' }}>
+      <h2>Sign Up</h2>
+      <Form form={form} onFinish={onFinish} layout="vertical">
+        <Form.Item name="email" rules={[{ required: true, message: 'Email is required' }, { type: 'email', message: 'Invalid email' }]}>
+          <Input placeholder="Email" />
         </Form.Item>
-        <Form.Item
-          name="password"
-          label="Password"
-          rules={[{ required: true, message: 'Please enter a password' }]}
-        >
-          <Input.Password placeholder="Choose a strong password" />
+        <Form.Item name="password" rules={[{ required: true, message: 'Password is required' }, { min: 6, message: 'Password must be at least 6 characters' }]}>
+          <Input.Password placeholder="Password" />
         </Form.Item>
-        <Form.Item
-          name="confirmPassword"
-          label="Confirm Password"
-          dependencies={['password']}
-          hasFeedback
-          rules={[{ required: true, message: 'Please confirm your password' }]}
-        >
-          <Input.Password placeholder="Re-enter your password" />
+        <Form.Item>
+          <Button type="primary" htmlType="submit" block>
+            Sign Up
+          </Button>
         </Form.Item>
-        <Button type="primary" htmlType="submit" loading={loading} block>
-          Sign up
-        </Button>
       </Form>
     </div>
   );
-}
+};
+
+export default SignupPage;
