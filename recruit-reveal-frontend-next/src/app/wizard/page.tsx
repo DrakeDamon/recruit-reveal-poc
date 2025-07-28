@@ -9,7 +9,8 @@ import InputBar from '@recruit/components/InputBar';
 import ChatThread from '@recruit/components/ChatThread';
 import { ReviewCard } from '@recruit/components/ReviewCard';
 import Dashboard from '@recruit/components/Dashboard';
-import {useDarkMode} from '@recruit/components/DarkModeContext';
+import { useDarkMode } from '@recruit/components/DarkModeContext';
+
 export type FormValues = {
   name: string;
   position: string;
@@ -32,6 +33,21 @@ export type FormValues = {
   weight_lbs?: number;
   [key: string]: any;
 };
+
+// Match EvalData interface from Dashboard.tsx
+interface EvalResult {
+  predicted_tier: string;
+  score: number;
+  notes?: string;
+  probability: number;
+  performance_score: number;
+  combine_score: number;
+  upside_score: number;
+  underdog_bonus?: number;
+  goals: string[];
+  switches?: string;
+  calendar_advice?: string;
+}
 
 const steps: { key: keyof FormValues | 'review'; prompt: string }[] = [
   { key: 'name', prompt: 'Hi! What’s your name?' },
@@ -63,7 +79,7 @@ export default function WizardPage() {
     { from: 'app', text: steps[0].prompt }
   ]);
   const [impute, setImpute] = useState(false);
-  const [evalData, setEvalData] = useState<any>(null);
+  const [evalResult, setEvalResult] = useState<EvalResult | null>(null);
   const { darkMode, toggleDarkMode } = useDarkMode();
 
   const handleNext = async () => {
@@ -79,11 +95,39 @@ export default function WizardPage() {
   };
 
   const handleSubmit = async () => {
+    const data = form.getValues();
     try {
-      const data = form.getValues();
-      const response = await axios.post('/api/evaluate', data);
-      setEvalData(response.data);
-    } catch (error) {
+      setMessages(m => [
+        ...m,
+        { from: 'user', text: 'Submitting for evaluation…' }
+      ]);
+
+      // Call /api/evaluate with axios
+      const response = await axios.post('/api/evaluate', { athlete_data: data }, {
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      const json = response.data;
+      setEvalResult({
+        predicted_tier: json.predicted_tier,
+        score: json.score,
+        notes: json.notes,
+        probability: json.probability,
+        performance_score: json.performance_score,
+        combine_score: json.combine_score,
+        upside_score: json.upside_score,
+        underdog_bonus: json.underdog_bonus,
+        goals: json.goals,
+        switches: json.switches,
+        calendar_advice: json.calendar_advice
+      });
+
+      setMessages(m => [
+        ...m,
+        { from: 'app', text: `🌟 Predicted Tier: ${json.predicted_tier}, Score: ${json.score}` }
+      ]);
+    } catch (err) {
+      console.error(err);
       message.error('Failed to submit evaluation. Please try again.');
     }
   };
@@ -91,7 +135,7 @@ export default function WizardPage() {
   const handleBack = () => setStep(s => Math.max(0, s - 1));
   const handleImpute = (checked: boolean) => setImpute(checked);
 
-  if (evalData) return <Dashboard evalData={evalData} />;
+  if (evalResult) return <Dashboard evalData={evalResult} />;
 
   return (
     <div
@@ -131,9 +175,7 @@ export default function WizardPage() {
             {step > 0 && (
               <Button onClick={handleBack}>Back</Button>
             )}
-            {step < steps.length - 1 && (
-              <Button type="primary" onClick={handleNext}>Next</Button>
-            )}
+            {step < steps.length - 1 && <Button type="primary" onClick={handleNext}>Next</Button>}
           </div>
         </FormProvider>
       </div>
