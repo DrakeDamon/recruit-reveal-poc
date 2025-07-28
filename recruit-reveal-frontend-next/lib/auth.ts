@@ -1,7 +1,5 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import bcrypt from 'bcrypt';
-import { prisma } from './prisma';
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: 'jwt' },
@@ -14,23 +12,17 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
       },
       authorize: async (credentials) => {
-        if (!credentials?.email || !credentials.password) {
+        if (!credentials?.email || !credentials?.password) {
           return null;
         }
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: credentials.email, password: credentials.password }),
         });
-        if (!user) {
-          return null;
-        }
-        const isValid = await bcrypt.compare(
-          credentials.password,
-          user.password_hash
-        );
-        if (!isValid) {
-          return null;
-        }
-        return { id: user.id.toString(), email: user.email };
+        if (!res.ok) return null;
+        const user = await res.json();
+        return { id: user.id, email: user.email };
       },
     }),
   ],
@@ -40,9 +32,7 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     session: async ({ session, token }) => {
-      if (session.user) {
-        session.user.id = token.id as string;
-      }
+      if (session.user) session.user.id = token.id as string;
       return session;
     },
   },

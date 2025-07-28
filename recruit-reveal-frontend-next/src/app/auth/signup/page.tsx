@@ -10,26 +10,23 @@ const SignupPage: React.FC = () => {
 
   const onFinish = async (values: { email: string; password: string }) => {
     try {
-      const response = await fetch('/api/register', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/register`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
       });
-
-      if (response.ok) {
+      if (res.ok) {
         message.success('Account created! Redirecting to login...');
         router.push('/auth/login');
       } else {
-        const errorData = await response.json();
-        message.error(errorData.message || 'Registration failed. Please try again.');
+        const errorData = await res.json();
+        message.error(errorData.message || 'Registration failed');
       }
-    } catch (error) {
-      console.error('Signup error:', error);
-      message.error('An unexpected error occurred.');
+    } catch (err) {
+      message.error('An unexpected error occurred');
     }
   };
+  
 
   return (
     <div style={{ maxWidth: 400, margin: 'auto', padding: '2rem' }}>
