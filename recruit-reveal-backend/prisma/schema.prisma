@@ -1,16 +1,37 @@
-// prisma/schema.prisma
-datasource db {
-  provider = "postgresql"
-  url      = env("PG_URL")
-}
+     generator client {
+       provider = "prisma-client-js"
+     }
 
-generator client {
-  provider = "prisma-client-js"
-}
+     datasource db {
+       provider = "postgresql"
+       url      = env("PG_URL")
+     }
 
-model User {
-  id            String   @id @default(uuid())
-  email         String   @unique
-  password_hash String
-  createdAt     DateTime @default(now())
-}
+     model User {
+       id            Int      @id @default(autoincrement())
+       email         String   @unique
+       password_hash String
+       createdAt     DateTime @default(now())
+       updatedAt     DateTime @updatedAt
+       evals         Eval[]   // Relation to evaluations
+     }
+
+     model Eval {
+       id                   Int      @id @default(autoincrement())
+       user                 User?    @relation(fields: [user_id], references: [email])
+       user_id              String   // Link to user email or 'test_user'
+       player_name          String
+       position             String   // QB, RB, etc.
+       score                Float
+       division             String
+       notes                String?
+       eval_date            DateTime @default(now())
+       probability          Float?
+       performance_score    Float?
+       combine_score        Float?
+       upside_score         Float?
+       underdog_bonus       Float?
+       goals                String[] // Array of goals
+       switches             String?
+       calendar_advice      String?
+     }
