@@ -77,10 +77,21 @@ export default function WizardPage() {
   const { profile, loading: profileLoading } = useUserProfile();
   const { isProfileComplete, needsProfileSetup } = useProfileCompletion();
 
+  // Generate dynamic welcome message based on user status
+  const getWelcomeMessage = () => {
+    if (session && profile?.name) {
+      return `🏈 Welcome back, ${profile.name}! Let's evaluate your potential!`;
+    } else if (session) {
+      return '🏈 Welcome! Ready to evaluate your potential?';
+    } else {
+      return '🏈 Welcome! Ready to evaluate your potential?';
+    }
+  };
+
   // Define position-specific steps
   const positionSteps = {
     QB: [
-      { key: 'Player_Name', prompt: '🏈 Welcome to Recruit Reveal! What\'s your name?' },
+      { key: 'Player_Name', prompt: getWelcomeMessage() },
       { key: 'position', prompt: '🎯 Awesome! Which position do you play?' },
       { key: 'grad_year', prompt: '📅 What year will you graduate and take the next step?' },
       { key: 'state', prompt: '🗺️ Which state do you play in?' },
@@ -98,7 +109,7 @@ export default function WizardPage() {
       { key: 'review', prompt: '🌟 Ready to see your potential? Let\'s reveal your recruit profile!' }
     ],
     RB: [
-      { key: 'Player_Name', prompt: '🏈 Welcome to Recruit Reveal! What\'s your name?' },
+      { key: 'Player_Name', prompt: getWelcomeMessage() },
       { key: 'position', prompt: '🎯 Awesome! Which position do you play?' },
       { key: 'grad_year', prompt: '📅 What year will you graduate and take the next step?' },
       { key: 'state', prompt: '🗺️ Which state do you play in?' },
@@ -117,7 +128,7 @@ export default function WizardPage() {
       { key: 'review', prompt: '🌟 Ready to see your potential? Let\'s reveal your recruit profile!' }
     ],
     WR: [
-      { key: 'Player_Name', prompt: '🏈 Welcome to Recruit Reveal! What\'s your name?' },
+      { key: 'Player_Name', prompt: getWelcomeMessage() },
       { key: 'position', prompt: '🎯 Awesome! Which position do you play?' },
       { key: 'grad_year', prompt: '📅 What year will you graduate and take the next step?' },
       { key: 'state', prompt: '🗺️ Which state do you play in?' },
@@ -133,7 +144,7 @@ export default function WizardPage() {
 
   // Initialize with first few universal steps before position selection
   const initialSteps = [
-    { key: 'Player_Name' as keyof FormValues, prompt: '🏈 Welcome to Recruit Reveal! What\'s your name?' },
+    { key: 'Player_Name' as keyof FormValues, prompt: getWelcomeMessage() },
     { key: 'position' as keyof FormValues, prompt: '🎯 Awesome! Which position do you play?' }
   ];
   const [currentSteps, setCurrentSteps] = useState<{ key: keyof FormValues | 'review'; prompt: string }[]>(initialSteps);
