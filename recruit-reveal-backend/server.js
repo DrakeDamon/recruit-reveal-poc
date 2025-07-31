@@ -127,7 +127,7 @@ app.post('/evaluate', async (req, res) => {
         } 
       });
     }
-    const user_id = String(user.id);
+    const user_id = user.id; // Now using integer ID instead of string
     const position = athlete_data.position;
     console.log('Triggering pipeline:', process.env.AZURE_PIPELINE_NAME, 'for position:', position);
     
@@ -161,6 +161,87 @@ app.post('/evaluate', async (req, res) => {
   } catch (err) {
     console.error('Evaluate error:', err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/profile/get', async (req, res) => {
+  try {
+    const { user_id, email } = req.query;
+    if (!user_id && !email) {
+      return res.status(400).json({ error: 'Missing user_id or email' });
+    }
+
+    const whereClause = email ? { email: String(email) } : { id: parseInt(user_id) };
+    const user = await prisma.user.findUnique({
+      where: whereClause,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        position: true,
+        graduation_year: true,
+        state: true,
+        height: true,
+        weight: true,
+        profile_photo_url: true,
+        video_links: true,
+        privacy_setting: true,
+        email_notifications: true,
+        profile_complete: true,
+        createdAt: true
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json(user);
+  } catch (err) {
+    console.error('Profile get error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/api/profile/update', async (req, res) => {
+  try {
+    const { user_id, email, ...profileData } = req.body;
+    if (!user_id && !email) {
+      return res.status(400).json({ error: 'Missing user_id or email' });
+    }
+
+    const whereClause = email ? { email: String(email) } : { id: parseInt(user_id) };
+
+    // Check if profile is now complete
+    const isComplete = profileData.name && profileData.position;
+    if (isComplete) {
+      profileData.profile_complete = true;
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: whereClause,
+      data: profileData,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        position: true,
+        graduation_year: true,
+        state: true,
+        height: true,
+        weight: true,
+        profile_photo_url: true,
+        video_links: true,
+        privacy_setting: true,
+        email_notifications: true,
+        profile_complete: true
+      }
+    });
+
+    res.json(updatedUser);
+  } catch (err) {
+    console.error('Profile update error:', err);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 

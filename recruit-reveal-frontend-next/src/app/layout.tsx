@@ -7,6 +7,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '../../lib/auth'; // Adjust the import path as necessary
 import { DarkModeProvider } from '@recruit/components/DarkModeContext';
 import Navbar from '../components/Navbar';
+import { UserProfileProvider } from '../contexts/UserProfileContext';
+import ProfileCompletionGuard from '../components/ProfileCompletionGuard';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -29,10 +31,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers session={session}>
-          <DarkModeProvider>
-            <Navbar />
-            <main>{children}</main>
-          </DarkModeProvider>
+          <UserProfileProvider>
+            <DarkModeProvider>
+              <Navbar />
+              <ProfileCompletionGuard>
+                <main>{children}</main>
+              </ProfileCompletionGuard>
+            </DarkModeProvider>
+          </UserProfileProvider>
         </Providers>
       </body>
     </html>
