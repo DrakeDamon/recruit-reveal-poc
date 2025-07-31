@@ -1,50 +1,64 @@
 'use client';
 import React from 'react';
 import { useFormContext, Controller } from 'react-hook-form';
-import { Form, Input, Select, Slider, Switch, Tooltip } from 'antd';
-import { InfoCircleOutlined } from '@ant-design/icons';
+import { Form, Input, Select } from 'antd';
 
 export type FormValues = {
-  name: string;
-  position: string;
+  Player_Name: string;
+  position: 'QB' | 'RB' | 'WR';
   grad_year: number;
   state: string;
+  // QB specific fields
   senior_yds?: number;
   senior_cmp?: number;
   senior_att?: number;
   senior_int?: number;
   senior_td_passes?: number;
   junior_yds?: number;
-  junior_cmp?: number;
-  junior_att?: number;
-  junior_int?: number;
-  junior_td_passes?: number;
+  // RB specific fields
+  senior_touches?: number;
+  senior_avg?: number;
+  senior_rec?: number;
+  senior_rec_yds?: number;
+  senior_td?: number;
+  junior_ypg?: number;
+  // WR specific fields
+  junior_rec?: number;
+  junior_rec_yds?: number;
+  junior_td?: number;
+  // Common combine fields
   dash40?: number;
   vertical?: number;
   shuttle?: number;
   height_inches?: number;
   weight_lbs?: number;
-  [key: string]: any;
+  [key: string]: string | number | undefined;
 };
 
 interface InputBarProps {
   step: number;
-  impute: boolean;
-  onImputeToggle: (checked: boolean) => void;
+  steps: { key: keyof FormValues | 'review'; prompt: string }[];
   onEnter: () => void;
 }
 
-const positions = ['QB', 'WR', 'RB', 'DB', 'LB', 'TE'] as const;
+const positions = ['QB', 'RB', 'WR'] as const;
 const states = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'] as const;
 
-const InputBar: React.FC<InputBarProps> = ({ step, impute, onImputeToggle, onEnter }) => {
+const InputBar: React.FC<InputBarProps> = ({ step, steps, onEnter }) => {
   const { control } = useFormContext<FormValues>();
-  // Simplified: assumes 1 input per step; customize for multipos fields if needed
-  switch (step) {
-    case 0:
+  
+  // Get the current step configuration
+  const currentStep = steps[step];
+  if (!currentStep) return null;
+
+  const { key } = currentStep;
+
+  // Render different input types based on the field key
+  switch (key as string) {
+    case 'Player_Name':
       return (
         <Controller
-          name="name"
+          name="Player_Name"
           control={control}
           rules={{ required: 'Name is required' }}
           render={({ field, fieldState }) => (
@@ -54,12 +68,19 @@ const InputBar: React.FC<InputBarProps> = ({ step, impute, onImputeToggle, onEnt
               help={fieldState.error?.message}
               className="w-full"
             >
-              <Input {...field} placeholder="Enter your name" autoFocus onPressEnter={onEnter} />
+              <Input 
+                {...field} 
+                placeholder="Enter your name" 
+                autoFocus 
+                onPressEnter={onEnter}
+                className="form-input"
+              />
             </Form.Item>
           )}
         />
       );
-    case 1:
+
+    case 'position':
       return (
         <Controller
           name="position"
@@ -83,7 +104,8 @@ const InputBar: React.FC<InputBarProps> = ({ step, impute, onImputeToggle, onEnt
           )}
         />
       );
-    case 2:
+
+    case 'grad_year':
       return (
         <Controller
           name="grad_year"
@@ -101,7 +123,8 @@ const InputBar: React.FC<InputBarProps> = ({ step, impute, onImputeToggle, onEnt
           )}
         />
       );
-    case 3:
+
+    case 'state':
       return (
         <Controller
           name="state"
@@ -125,23 +148,30 @@ const InputBar: React.FC<InputBarProps> = ({ step, impute, onImputeToggle, onEnt
           )}
         />
       );
-    // For other stat/combine steps, repeat pattern as above or customize per your field/position mapping.
+
+    case 'review':
+      return null; // Review step is handled by ReviewCard component
+
     default:
-      // If you want to show a number input for all other steps:
-      const stepMap = [
-        'senior_yds', 'senior_cmp', 'senior_att', 'senior_int', 'senior_td_passes',
-        'junior_yds', 'junior_cmp', 'junior_att', 'junior_int', 'junior_td_passes',
-        'dash40', 'vertical', 'shuttle', 'height_inches', 'weight_lbs'
-      ];
-      const fieldName = stepMap[step - 4];
-      if (!fieldName) return null;
+      // For all other fields (stats, combine, etc.), render a number input
       return (
         <Controller
-          name={fieldName}
+          name={String(key) as keyof FormValues}
           control={control}
-          render={({ field }) => (
-            <Form.Item label={fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} className="w-full">
-              <Input {...field} type="number" placeholder={fieldName.replace(/_/g, ' ')} onPressEnter={onEnter} />
+          render={({ field, fieldState }) => (
+            <Form.Item
+              label={String(key).replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+              validateStatus={fieldState.error ? 'error' : undefined}
+              help={fieldState.error?.message}
+              className="w-full"
+            >
+              <Input
+                {...field}
+                type="number"
+                placeholder={`Enter ${String(key).replace(/_/g, ' ').toLowerCase()}`}
+                onPressEnter={onEnter}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all"
+              />
             </Form.Item>
           )}
         />

@@ -3,20 +3,24 @@ const { PrismaClient } = require('@prisma/client');
 const cors = require('cors');
 const { SynapseManagementClient } = require('@azure/arm-synapse');
 const { DefaultAzureCredential } = require('@azure/identity');
+const { triggerPipeline } = require('./lib/synapse');
 const bcrypt = require('bcrypt');
+const { Pool } = require('pg');
 const app = express();
 app.use(express.json({ strict: false }));
 const dotenv = require('dotenv');
 const dotenvResult = dotenv.config({ path: './.env' });
 console.log('dotenv result:', dotenvResult.parsed || dotenvResult.error);
 console.log('Loaded env vars:', Object.keys(process.env));
+console.log('MOCK_SYNAPSE:', process.env.MOCK_SYNAPSE);
 app.use(cors());
 
 const prisma = new PrismaClient();
+const pool = new Pool({connectionString: process.env.PG_URL, ssl: {rejectUnauthorized: false}});
 
 async function fetchNotebookOutput(status) {
-  const result = await prisma.eval.findFirst({ orderBy: { id: 'desc' } });
-  return result || {
+  const {rows} = await pool.query('SELECT * FROM evals ORDER BY id DESC LIMIT 1');
+  return rows[0] || {
     score: 69.3,
     predicted_tier: 'FCS',
     notes: 'Balanced profile',
@@ -107,62 +111,52 @@ app.get('/eval/history', async (req, res) => {
 });
 
 app.post('/evaluate', async (req, res) => {
-  let athlete_data;
   try {
-    athlete_data = req.body.athlete_data;
+    const athlete_data = req.body.athlete_data;
     if (!athlete_data || !athlete_data.Player_Name || !athlete_data.position) {
       return res.status(400).json({ error: 'Invalid input: Player_Name and position required' });
     }
-    const user_id = 'test_user'; // Replace with auth user_id later
+    
+    // Create a test user if it doesn't exist, or use existing one
+    let user = await prisma.user.findFirst({ where: { email: 'test@example.com' } });
+    if (!user) {
+      user = await prisma.user.create({ 
+        data: { 
+          email: 'test@example.com', 
+          password_hash: await bcrypt.hash('test123', 10) 
+        } 
+      });
+    }
+    const user_id = String(user.id);
     const position = athlete_data.position;
     console.log('Triggering pipeline:', process.env.AZURE_PIPELINE_NAME, 'for position:', position);
-    const credential = new DefaultAzureCredential();
-    const client = new SynapseManagementClient(credential, process.env.AZURE_SUBSCRIPTION_ID);
-    const params = { parameters: { position, athlete_data } };
-    const run = await client.pipelines.createRun(
-      process.env.AZURE_RESOURCE_GROUP,
-      process.env.AZURE_SYNAPSE_WORKSPACE,
-      process.env.AZURE_PIPELINE_NAME,
-      params
-    );
-    console.log('Pipeline run ID:', run.runId);
-    const maxWait = 5 * 60 * 1000; // 5 minutes
-    const start = Date.now();
-    let result;
-    while (Date.now() - start < maxWait) {
-      const status = await client.pipelineRuns.get(
-        process.env.AZURE_RESOURCE_GROUP,
-        process.env.AZURE_SYNAPSE_WORKSPACE,
-        run.runId
-      );
-      console.log('Pipeline status:', status.status);
-      if (status.status === 'Succeeded') {
-        result = await fetchNotebookOutput(status);
-        break;
-      } else if (status.status === 'Failed') {
-        throw new Error('Pipeline failed');
-      }
-      await new Promise(r => setTimeout(r, 5000));
-    }
-    if (!result) throw new Error('Pipeline timed out');
-    await prisma.eval.create({
-      data: {
-        user_id,
-        player_name: athlete_data.Player_Name,
-        position,
-        score: result.score,
-        division: result.predicted_tier,
-        notes: result.notes,
-        probability: result.probability,
-        performance_score: result.performance_score,
-        combine_score: result.combine_score,
-        upside_score: result.upside_score,
-        underdog_bonus: result.underdog_bonus,
-        goals: result.goals,
-        switches: result.switches,
-        calendar_advice: result.calendar_advice
-      }
+    
+    const result = await triggerPipeline({
+      notebookName: process.env.AZURE_NOTEBOOK_NAME,
+      pipelineParameters: { position, athlete_data }
     });
+    
+    // Skip database save in mock mode to avoid foreign key issues
+    if (process.env.MOCK_SYNAPSE !== 'true') {
+      await prisma.eval.create({
+        data: {
+          user_id,
+          player_name: athlete_data.Player_Name,
+          position,
+          score: result.score,
+          division: result.predicted_tier,
+          notes: result.notes,
+          probability: result.probability,
+          performance_score: result.performance_score,
+          combine_score: result.combine_score,
+          upside_score: result.upside_score,
+          underdog_bonus: result.underdog_bonus,
+          goals: result.goals,
+          switches: result.switches,
+          calendar_advice: result.calendar_advice
+        }
+      });
+    }
     res.json(result);
   } catch (err) {
     console.error('Evaluate error:', err);
@@ -170,4 +164,5 @@ app.post('/evaluate', async (req, res) => {
   }
 });
 
-app.listen(3000, () => console.log('API running on port 3000'));
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => console.log(`API running on port ${PORT}`));

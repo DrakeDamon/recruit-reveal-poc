@@ -1,141 +1,248 @@
 'use client';
 
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { Button, message } from 'antd';
-import { ProgressPills } from '@recruit/components/ProgressPills';
-import InputBar from '@recruit/components/InputBar';
-import ChatThread from '@recruit/components/ChatThread';
-import { ReviewCard } from '@recruit/components/ReviewCard';
-import Dashboard from '@recruit/components/Dashboard';
-import { useDarkMode } from '@recruit/components/DarkModeContext';
+import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import { ProgressPills } from '../../components/ProgressPills';
+import InputBar from '../../components/InputBar';
+import ChatThread from '../../components/ChatThread';
+import { ReviewCard } from '../../components/ReviewCard';
+import Dashboard from '../../components/Dashboard';
+import { useDarkMode } from '../../components/DarkModeContext';
 
 export type FormValues = {
-  name: string;
-  position: string;
+  Player_Name: string;
+  position: 'QB' | 'RB' | 'WR';
   grad_year: number;
   state: string;
+  // QB specific fields
   senior_yds?: number;
   senior_cmp?: number;
   senior_att?: number;
   senior_int?: number;
   senior_td_passes?: number;
   junior_yds?: number;
-  junior_cmp?: number;
-  junior_att?: number;
-  junior_int?: number;
-  junior_td_passes?: number;
+  // RB specific fields
+  senior_touches?: number;
+  senior_avg?: number;
+  senior_rec?: number;
+  senior_rec_yds?: number;
+  senior_td?: number;
+  junior_ypg?: number;
+  // WR specific fields
+  junior_rec?: number;
+  junior_rec_yds?: number;
+  junior_td?: number;
+  // Common combine fields
   dash40?: number;
   vertical?: number;
   shuttle?: number;
   height_inches?: number;
   weight_lbs?: number;
-  [key: string]: any;
+  [key: string]: string | number | undefined;
 };
 
-// Match EvalData interface from Dashboard.tsx
-interface EvalResult {
-  predicted_tier: string;
-  score: number;
-  notes?: string;
-  probability: number;
-  performance_score: number;
-  combine_score: number;
-  upside_score: number;
-  underdog_bonus?: number;
-  goals: string[];
-  switches?: string;
-  calendar_advice?: string;
-}
-
-const steps: { key: keyof FormValues | 'review'; prompt: string }[] = [
-  { key: 'name', prompt: 'Hi! What’s your name?' },
-  { key: 'position', prompt: 'Great! Which position are you evaluating?' },
-  { key: 'grad_year', prompt: 'What’s your graduation year?' },
-  { key: 'state', prompt: 'Which state do you play in?' },
-  { key: 'senior_yds', prompt: 'Enter your Senior Passing Yards.' },
-  { key: 'senior_cmp', prompt: 'Enter your Senior Completions.' },
-  { key: 'senior_att', prompt: 'Enter your Senior Attempts.' },
-  { key: 'senior_int', prompt: 'Enter your Senior Interceptions.' },
-  { key: 'senior_td_passes', prompt: 'Enter your Senior TD Passes.' },
-  { key: 'junior_yds', prompt: 'Enter your Junior Passing Yards.' },
-  { key: 'junior_cmp', prompt: 'Enter your Junior Completions.' },
-  { key: 'junior_att', prompt: 'Enter your Junior Attempts.' },
-  { key: 'junior_int', prompt: 'Enter your Junior Interceptions.' },
-  { key: 'junior_td_passes', prompt: 'Enter your Junior TD Passes.' },
-  { key: 'dash40', prompt: 'Enter your 40-yard Dash time.' },
-  { key: 'vertical', prompt: 'Enter your Vertical Jump.' },
-  { key: 'shuttle', prompt: 'Enter your Shuttle time.' },
-  { key: 'height_inches', prompt: 'Enter your Height (inches).' },
-  { key: 'weight_lbs', prompt: 'Enter your Weight (lbs).' },
-  { key: 'review', prompt: 'Review & Submit?' },
-];
+// Mock evaluation result for testing
+const mockEvalResult = {
+  predicted_tier: 'FCS',
+  score: 69.3,
+  notes: 'Balanced profile with room for improvement',
+  probability: 0.693,
+  performance_score: 0.70,
+  combine_score: 0.65,
+  upside_score: 0.10,
+  underdog_bonus: 0.05,
+  goals: ['Improve 40-yard dash to 4.5s', 'Increase senior TD passes'],
+  switches: 'Consider switching to WR for better Power5 fit',
+  calendar_advice: 'Schedule campus visits during April 15-May 24, 2025 contact period',
+  position: 'QB' as 'QB' | 'RB' | 'WR'
+};
 
 export default function WizardPage() {
   const form = useForm<FormValues>();
+  const router = useRouter();
   const [step, setStep] = useState(0);
+  const [selectedPosition, setSelectedPosition] = useState<'QB' | 'RB' | 'WR' | null>(null);
   const [messages, setMessages] = useState<{ from: 'app' | 'user'; text: string }[]>([
-    { from: 'app', text: steps[0].prompt }
+    { from: 'app', text: '🏈 Welcome to Recruit Reveal! What\'s your name, future star?' }
   ]);
-  const [impute, setImpute] = useState(false);
-  const [evalResult, setEvalResult] = useState<EvalResult | null>(null);
+  const [evalResult, setEvalResult] = useState<typeof mockEvalResult | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { darkMode, toggleDarkMode } = useDarkMode();
 
-  const handleNext = async () => {
-    const valid = await form.trigger();
-    if (!valid) return;
-    const key = steps[step].key;
-    const raw = form.getValues()[key as string];
-    setMessages(prev => [...prev, { from: 'user', text: String(raw) }]);
-    form.resetField(key as string);
-    const next = step + 1;
-    setStep(next);
-    if (next < steps.length) setMessages(prev => [...prev, { from: 'app', text: steps[next].prompt }]);
+  // Define position-specific steps
+  const positionSteps = {
+    QB: [
+      { key: 'Player_Name', prompt: '🏈 Welcome to Recruit Reveal! What\'s your name?' },
+      { key: 'position', prompt: '🎯 Awesome! Which position do you play?' },
+      { key: 'grad_year', prompt: '📅 What year will you graduate and take the next step?' },
+      { key: 'state', prompt: '🗺️ Which state do you play in?' },
+      { key: 'senior_yds', prompt: '🚀 Let\'s dive into your senior year passing yards - show me those numbers!' },
+      { key: 'senior_cmp', prompt: '🎯 How many completions did you rack up in your senior year?' },
+      { key: 'senior_att', prompt: '💪 Total passing attempts in your senior season?' },
+      { key: 'senior_int', prompt: '📊 Senior year interceptions (every QB throws a few!)?' },
+      { key: 'senior_td_passes', prompt: '🔥 Senior year touchdown passes?' },
+      { key: 'junior_yds', prompt: '⭐ Junior year passing yards - building that foundation!' },
+      { key: 'dash40', prompt: '💨 40-yard dash time - show me that speed!' },
+      { key: 'vertical', prompt: '🦘 Vertical jump' },
+      { key: 'shuttle', prompt: '⚡ Shuttle time' },
+      { key: 'height_inches', prompt: '📏 Height' },
+      { key: 'weight_lbs', prompt: '⚖️ Weight' },
+      { key: 'review', prompt: '🌟 Ready to see your potential? Let\'s reveal your recruit profile!' }
+    ],
+    RB: [
+      { key: 'Player_Name', prompt: '🏈 Welcome to Recruit Reveal! What\'s your name?' },
+      { key: 'position', prompt: '🎯 Awesome! Which position do you play?' },
+      { key: 'grad_year', prompt: '📅 What year will you graduate and take the next step?' },
+      { key: 'state', prompt: '🗺️ Which state do you play in?' },
+      { key: 'senior_yds', prompt: '🏃‍♂️ Senior year rushing yards - how many yards did you rack up?' },
+      { key: 'senior_touches', prompt: '👐 Total touches' },
+      { key: 'senior_avg', prompt: '📊 Average yards per carry in your senior season?' },
+      { key: 'senior_rec', prompt: '🤲 Senior year receptions - dual threat ability!' },
+      { key: 'senior_rec_yds', prompt: '📡 Senior receiving yards' },
+      { key: 'senior_td', prompt: '🏆 Total touchdowns in your senior year?' },
+      { key: 'junior_ypg', prompt: '⭐ Junior year yards per game - consistency matters!' },
+      { key: 'dash40', prompt: '💨 40-yard dash time - show me that speed!' },
+      { key: 'vertical', prompt: '🦘 Vertical jump' },
+      { key: 'shuttle', prompt: '⚡ Shuttle time' },
+      { key: 'height_inches', prompt: '📏 Height' },
+      { key: 'weight_lbs', prompt: '⚖️ Weight' },
+      { key: 'review', prompt: '🌟 Ready to see your potential? Let\'s reveal your recruit profile!' }
+    ],
+    WR: [
+      { key: 'Player_Name', prompt: '🏈 Welcome to Recruit Reveal! What\'s your name?' },
+      { key: 'position', prompt: '🎯 Awesome! Which position do you play?' },
+      { key: 'grad_year', prompt: '📅 What year will you graduate and take the next step?' },
+      { key: 'state', prompt: '🗺️ Which state do you play in?' },
+      { key: 'dash40', prompt: '💨 40-yard dash time - show me that speed!' },
+      { key: 'vertical', prompt: '🦘 Vertical jump' },
+      { key: 'shuttle', prompt: '⚡ Shuttle time' },
+      { key: 'height_inches', prompt: '📏 Height' },
+      { key: 'weight_lbs', prompt: '⚖️ Weight' },
+      { key: 'review', prompt: '🌟 Ready to see your potential? We\'ll analyze your combine metrics!' }
+    ],
+    DEFAULT: [] as { key: keyof FormValues | 'review'; prompt: string }[]
   };
 
-  const handleSubmit = async () => {
-    const data = form.getValues();
-    try {
-      setMessages(m => [
-        ...m,
-        { from: 'user', text: 'Submitting for evaluation…' }
-      ]);
+  // Initialize with first few universal steps before position selection
+  const initialSteps = [
+    { key: 'Player_Name' as keyof FormValues, prompt: '🏈 Welcome to Recruit Reveal! What\'s your name?' },
+    { key: 'position' as keyof FormValues, prompt: '🎯 Awesome! Which position do you play?' }
+  ];
+  const [currentSteps, setCurrentSteps] = useState<{ key: keyof FormValues | 'review'; prompt: string }[]>(initialSteps);
 
-      // Call /api/evaluate with axios
-      const response = await axios.post('/api/evaluate', { athlete_data: data }, {
-        headers: { 'Content-Type': 'application/json' }
-      });
+  // Build steps based on selected position
+  const buildSteps = (position: 'QB' | 'RB' | 'WR') => {
+    return positionSteps[position] || positionSteps.DEFAULT;
+  };
 
-      const json = response.data;
-      setEvalResult({
-        predicted_tier: json.predicted_tier,
-        score: json.score,
-        notes: json.notes,
-        probability: json.probability,
-        performance_score: json.performance_score,
-        combine_score: json.combine_score,
-        upside_score: json.upside_score,
-        underdog_bonus: json.underdog_bonus,
-        goals: json.goals,
-        switches: json.switches,
-        calendar_advice: json.calendar_advice
-      });
+  // Update steps when position changes - critical for dynamic question flow
+  useEffect(() => {
+    if (selectedPosition && step === 1) {
+      const newSteps = buildSteps(selectedPosition);
+      setCurrentSteps(newSteps);
+      // Add user response to chat thread
+      setMessages(prev => [...prev, { from: 'user', text: selectedPosition }]);
+      setStep(2);
+      // Immediately show next question prompt to maintain chat flow
+      if (newSteps[2]?.prompt) {
+        setTimeout(() => {
+          setMessages(prev => [...prev, { from: 'app', text: newSteps[2].prompt }]);
+        }, 300);
+      }
+    }
+  }, [selectedPosition, step]);
 
-      setMessages(m => [
-        ...m,
-        { from: 'app', text: `🌟 Predicted Tier: ${json.predicted_tier}, Score: ${json.score}` }
-      ]);
-    } catch (err) {
-      console.error(err);
-      message.error('Failed to submit evaluation. Please try again.');
+  const handleNext = async () => {
+    // Validate current field only (not entire form)
+    const currentStep = currentSteps[step];
+    if (!currentStep) return;
+
+    const fieldName = currentStep.key as string;
+    const valid = await form.trigger(fieldName);
+    if (!valid) return;
+
+    const key = currentStep.key;
+    const value = form.getValues()[key as keyof FormValues];
+
+    // Handle position selection specially - triggers step array rebuild
+    if (key === 'position') {
+      setSelectedPosition(value as 'QB' | 'RB' | 'WR');
+      return; // Position change is handled in useEffect
+    } else {
+      // Add user input to chat thread for visual continuity
+      setMessages(prev => [...prev, { from: 'user', text: String(value) }]);
+    }
+
+    const nextStep = step + 1;
+    setStep(nextStep);
+
+    // Show next question prompt with slight delay for better UX
+    if (nextStep < currentSteps.length) {
+      const nextPrompt = currentSteps[nextStep]?.prompt;
+      if (nextPrompt) {
+        setTimeout(() => {
+          setMessages(prev => [...prev, { from: 'app', text: nextPrompt }]);
+        }, 300);
+      }
     }
   };
 
-  const handleBack = () => setStep(s => Math.max(0, s - 1));
-  const handleImpute = (checked: boolean) => setImpute(checked);
+  const handleBack = () => {
+    const prevStep = Math.max(0, step - 1);
+    setStep(prevStep);
+  };
 
-  if (evalResult) return <Dashboard evalData={evalResult} />;
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+
+    try {
+      // Get all form data including position
+      const formData = form.getValues();
+
+      // Call the evaluation API with position data
+      const response = await fetch('/api/evaluate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          position: selectedPosition, // Ensure position is included
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Evaluation failed: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+
+      // Store evaluation result and redirect to dashboard
+      sessionStorage.setItem('evalResult', JSON.stringify({
+        ...result,
+        position: selectedPosition,
+        playerName: formData.Player_Name,
+      }));
+
+      // Redirect to dashboard page with results
+      router.push('/dashboard');
+
+    } catch (error) {
+      console.error('Evaluation submission failed:', error);
+      message.error('Failed to evaluate profile. Please try again.');
+      // Fallback to mock data for development
+      setEvalResult({ ...mockEvalResult, position: selectedPosition || 'QB' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (evalResult) {
+    return <Dashboard evalData={evalResult} />;
+  }
 
   return (
     <div
@@ -144,30 +251,37 @@ export default function WizardPage() {
     >
       <div className="max-w-xl w-full mx-auto flex flex-col flex-1 pt-6">
         <div className="flex justify-between items-center mb-2">
-          <h2 className="text-lg font-semibold text-[var(--text-primary)]">Recruit Reveal Wizard</h2>
+          <h2 className="text-lg font-semibold cyber-title">Recruit Reveal</h2>
           <Button size="small" onClick={toggleDarkMode}>
             {darkMode ? 'Light Mode' : 'Dark Mode'}
           </Button>
         </div>
         <FormProvider {...form}>
-          <ProgressPills total={steps.length} current={step} onClick={setStep} />
+          <ProgressPills total={currentSteps.length} current={step} onClick={setStep} />
           <div className="flex-1 flex flex-col overflow-hidden min-h-[400px]">
             <ChatThread messages={messages} stagger={true} />
           </div>
           <div className="input-bar sticky bottom-0 bg-[var(--bg-primary)]">
-            {step < steps.length - 1 ? (
-              <InputBar
-                step={step}
-                impute={impute}
-                onImputeToggle={handleImpute}
-                onEnter={handleNext}
-              />
-            ) : (
+            {/* Debug info - remove in production */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="text-xs text-gray-500 mb-2">
+                Step: {step}, Steps length: {currentSteps.length}, Current step key: {currentSteps[step]?.key}
+              </div>
+            )}
+            
+            {currentSteps[step]?.key === 'review' ? (
               <ReviewCard
                 answers={form.getValues()}
                 onEdit={setStep}
                 onSubmit={handleSubmit}
-                stepKeys={steps.map(s => s.key as string)}
+                stepKeys={currentSteps.map(s => s.key as string)}
+                loading={isSubmitting}
+              />
+            ) : (
+              <InputBar
+                step={step}
+                steps={currentSteps}
+                onEnter={handleNext}
               />
             )}
           </div>
@@ -175,7 +289,9 @@ export default function WizardPage() {
             {step > 0 && (
               <Button onClick={handleBack}>Back</Button>
             )}
-            {step < steps.length - 1 && <Button type="primary" onClick={handleNext}>Next</Button>}
+            {currentSteps[step]?.key !== 'review' && (
+              <Button type="primary" onClick={handleNext}>Next</Button>
+            )}
           </div>
         </FormProvider>
       </div>

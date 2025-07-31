@@ -1,36 +1,199 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Recruit Reveal Frontend
 
-## Getting Started
+A cutting-edge high school football recruiting evaluation platform focused on athleticism, performance, and college fit.
 
-First, run the development server:
+## 🎨 Brand Identity
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### Brand Personality
+
+- **Bold & Athletic**: Conveying strength, energy, and clarity
+- **Modern & Clean**: Minimalistic layouts with ample white space
+- **Trustworthy & Professional**: Crisp typography and consistent color usage
+- **Engaging & Dynamic**: Subtle animations and interactive UI elements
+
+### Brand Colors
+
+- **Primary Navy Blue**: `#1D2D50` - Represents strength and professionalism
+- **Primary Turquoise**: `#00B7C2` - Represents energy and innovation
+- **Gradients**: Linear gradients combining navy and turquoise for visual impact
+
+### Typography
+
+- **Brand Headers**: Bebas Neue (via Google Fonts) - Bold, athletic feel
+- **Body Text**: Inter (via Google Fonts) - Excellent readability and accessibility
+- **Fallbacks**: Oswald, Montserrat for headers; Poppins for body text
+
+## 🏗️ Architecture
+
+### Tech Stack
+
+- **Framework**: Next.js 14 with App Router
+- **Styling**: Tailwind CSS with custom CSS variables
+- **Animations**: Framer Motion for declarative animations
+- **UI Components**: Ant Design with custom brand styling
+- **State Management**: React Context for dark mode and form state
+- **Forms**: React Hook Form with Ant Design integration
+
+### File Structure
+
+```
+src/
+├── app/
+│   ├── auth/
+│   │   ├── login/page.tsx      # Brand-styled login page
+│   │   └── signup/page.tsx     # Brand-styled signup page
+│   ├── wizard/
+│   │   └── page.tsx            # Multi-step evaluation wizard
+│   ├── layout.tsx              # Root layout with brand fonts
+│   └── globals.css             # Brand colors and styling
+├── components/
+│   ├── Dashboard.tsx           # Evaluation results dashboard
+│   ├── ChatThread.tsx          # Animated chat interface
+│   ├── ProgressPills.tsx       # Animated progress indicators
+│   ├── InputBar.tsx            # Dynamic form inputs
+│   └── DarkModeContext.tsx     # Dark mode state management
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🎭 Animation Implementation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Framer Motion Usage
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+All animations use Framer Motion for performance and consistency:
 
-## Learn More
+```typescript
+// Example: Staggered card animations
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 },
+  },
+};
 
-To learn more about Next.js, take a look at the following resources:
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 },
+};
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Animation Types
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **Page Transitions**: Fade-in with scale effects
+2. **Chat Messages**: Staggered slide-in with bubble animations
+3. **Progress Indicators**: Animated fill bars and pill transitions
+4. **Form Interactions**: Hover effects and focus animations
+5. **Dashboard Cards**: Staggered entrance animations
 
-## Deploy on Vercel
+### Performance Considerations
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Uses `AnimatePresence` for smooth enter/exit animations
+- Implements `prefers-reduced-motion` for accessibility
+- Optimized with `transform` and `opacity` properties
+- Staggered animations prevent overwhelming users
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🎨 UX Design Decisions
+
+### Color System
+
+```css
+:root {
+  --brand-navy: #1d2d50;
+  --brand-turquoise: #00b7c2;
+  --gradient-primary: linear-gradient(
+    135deg,
+    var(--brand-navy) 0%,
+    var(--brand-turquoise) 100%
+  );
+}
+```
+
+### Dark Mode Implementation
+
+- CSS variables for seamless theme switching
+- Persistent preference storage
+- Consistent brand colors across themes
+- Smooth transitions between modes
+
+### Responsive Design
+
+- Mobile-first approach with Tailwind breakpoints
+- Flexible card layouts using Ant Design Grid
+- Touch-friendly interactive elements
+- Optimized typography scaling
+
+### Accessibility Features
+
+- High contrast ratios for brand colors
+- Keyboard navigation support
+- Screen reader friendly markup
+- Reduced motion support
+- Semantic HTML structure
+
+## 🚀 Key Features
+
+### Multi-Step Wizard
+
+- **Dynamic Form Generation**: Position-specific questions (QB, RB, WR)
+- **Chat-like Interface**: Message bubbles with brand styling
+- **Progress Tracking**: Animated pills with completion indicators
+- **Real-time Validation**: Inline error handling and feedback
+
+### Dashboard
+
+- **Brand Header**: Gradient background with animated title
+- **Score Visualization**: Animated progress circles and charts
+- **Expandable Goals**: Interactive goal management
+- **Recruiting Calendar**: Timeline with color-coded periods
+- **Share Functionality**: Social media integration
+
+### Authentication
+
+- **Brand-styled Forms**: Consistent with overall design
+- **Smooth Transitions**: Page-to-page animations
+- **Error Handling**: User-friendly validation messages
+- **Dark Mode Support**: Seamless theme switching
+
+## 🛠️ Development
+
+### Getting Started
+
+```bash
+npm install
+npm run dev
+```
+
+### Environment Variables
+
+```env
+NEXT_PUBLIC_BACKEND_URL=http://localhost:3001
+```
+
+### Brand Implementation Notes
+
+- All components use CSS custom properties for brand colors
+- Animations are declarative and performance-optimized
+- Dark mode is implemented at the CSS variable level
+- Typography scales responsively across devices
+
+### Customization
+
+- Brand colors can be modified in `globals.css`
+- Animation timing can be adjusted in component variants
+- Font families can be changed in `layout.tsx`
+- Component styling uses Tailwind with custom classes
+
+## 📱 Mobile Optimization
+
+- Touch-friendly button sizes (44px minimum)
+- Swipe gestures for navigation
+- Optimized chat interface for mobile
+- Responsive progress indicators
+- Mobile-first form design
+
+## 🎯 Performance
+
+- Font loading optimized with `display: swap`
+- Lazy loading for non-critical components
+- Optimized animations using `transform` properties
+- Minimal bundle size with tree shaking
+- Efficient re-renders with React.memo where appropriate
