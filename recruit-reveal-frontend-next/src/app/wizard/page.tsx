@@ -5,12 +5,15 @@ import { useForm, FormProvider } from 'react-hook-form';
 import { Button, message } from 'antd';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { ProgressPills } from '../../components/ProgressPills';
 import InputBar from '../../components/InputBar';
 import ChatThread from '../../components/ChatThread';
 import { ReviewCard } from '../../components/ReviewCard';
 import Dashboard from '../../components/Dashboard';
 import { useDarkMode } from '../../components/DarkModeContext';
+import ProfileSetupModal from '../../components/ProfileSetupModal';
+import { useUserProfile, useProfileCompletion } from '../../contexts/UserProfileContext';
 
 export type FormValues = {
   Player_Name: string;
@@ -65,12 +68,14 @@ export default function WizardPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [selectedPosition, setSelectedPosition] = useState<'QB' | 'RB' | 'WR' | null>(null);
-  const [messages, setMessages] = useState<{ from: 'app' | 'user'; text: string }[]>([
-    { from: 'app', text: '🏈 Welcome to Recruit Reveal! What\'s your name, future star?' }
-  ]);
+  const [messages, setMessages] = useState<{ from: 'app' | 'user'; text: string }[]>([]);
   const [evalResult, setEvalResult] = useState<typeof mockEvalResult | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showProfileSetup, setShowProfileSetup] = useState(false);
   const { darkMode, toggleDarkMode } = useDarkMode();
+  const { data: session } = useSession();
+  const { profile, loading: profileLoading } = useUserProfile();
+  const { isProfileComplete, needsProfileSetup } = useProfileCompletion();
 
   // Define position-specific steps
   const positionSteps = {
@@ -133,10 +138,38 @@ export default function WizardPage() {
   ];
   const [currentSteps, setCurrentSteps] = useState<{ key: keyof FormValues | 'review'; prompt: string }[]>(initialSteps);
 
-  // Build steps based on selected position
-  const buildSteps = (position: 'QB' | 'RB' | 'WR') => {
-    return positionSteps[position] || positionSteps.DEFAULT;
-  };
+  // Initialize messages based on profile data
+  useEffect(() => {
+    if (profile && !profileLoading) {
+      const initialMessages: { from: 'app' | 'user'; text: string }[] = [
+        { from: 'app', text: `🏈 Welcome back, ${profile.name}! Ready to evaluate your potential?` }
+      ];
+      setMessages(initialMessages);
+      
+      // Pre-fill form with profile data
+      if (profile.name) {
+        form.setValue('Player_Name', profile.name);
+      }
+      if (profile.position) {
+        form.setValue('position', profile.position as 'QB' | 'RB' | 'WR');
+        setSelectedPosition(profile.position as 'QB' | 'RB' | 'WR');
+      }
+      if (profile.graduation_year) {
+        form.setValue('grad_year', profile.graduation_year);
+      }
+      if (profile.state) {
+        form.setValue('state', profile.state);
+      }
+      if (profile.height) {
+        form.setValue('height_inches', profile.height);
+      }
+      if (profile.weight) {
+        form.setValue('weight_lbs', profile.weight);
+      }
+    } else if (!profileLoading && needsProfileSetup) {
+      setShowProfileSetup(true);
+    }
+  }, [profile, profileLoading, needsProfileSetup, form]);
 
   // Update steps when position changes - critical for dynamic question flow
   useEffect(() => {
@@ -154,6 +187,34 @@ export default function WizardPage() {
       }
     }
   }, [selectedPosition, step]);
+
+  // Build steps based on selected position
+  const buildSteps = (position: 'QB' | 'RB' | 'WR') => {
+    return positionSteps[position] || positionSteps.DEFAULT;
+  };
+
+  // Show profile setup modal if needed
+  if (showProfileSetup) {
+    return (
+      <ProfileSetupModal
+        visible={showProfileSetup}
+        onClose={() => setShowProfileSetup(false)}
+        onComplete={() => setShowProfileSetup(false)}
+      />
+    );
+  }
+
+  // Show loading while profile is loading
+  if (profileLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p>Loading your profile...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleNext = async () => {
     // Validate current field only (not entire form)

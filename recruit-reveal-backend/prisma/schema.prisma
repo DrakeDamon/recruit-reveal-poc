@@ -8,18 +8,31 @@
      }
 
      model User {
-       id            Int      @id @default(autoincrement())
-       email         String   @unique
-       password_hash String
-       createdAt     DateTime @default(now())
-       updatedAt     DateTime @updatedAt
-       evals         Eval[]   // Relation to evaluations
+       id              Int      @id @default(autoincrement())
+       email           String   @unique
+       password_hash   String
+       createdAt       DateTime @default(now())
+       updatedAt       DateTime @updatedAt
+       evals           Eval[]   // Relation to evaluations
+       
+       // Profile fields
+       name            String?
+       position        String?  // QB, WR, RB, DB, LB, TE
+       graduation_year Int?
+       state           String?
+       height          Int?     // Height in inches
+       weight          Int?     // Weight in pounds
+       profile_photo_url String?
+       video_links     String[] // Array of video URLs (YouTube, Hudl)
+       privacy_setting String   @default("public") // "public" or "private"
+       email_notifications Boolean @default(true)
+       profile_complete Boolean @default(false)
      }
 
      model Eval {
        id                   Int      @id @default(autoincrement())
-       user                 User?    @relation(fields: [user_id], references: [email])
-       user_id              String   // Link to user email or 'test_user'
+       user                 User?    @relation(fields: [user_id], references: [id])
+       user_id              Int?     // Link to user ID
        player_name          String
        position             String   // QB, RB, etc.
        score                Float

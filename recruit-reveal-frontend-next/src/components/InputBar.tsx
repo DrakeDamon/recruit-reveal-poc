@@ -154,9 +154,13 @@ const InputBar: React.FC<InputBarProps> = ({ step, steps, onEnter }) => {
 
     default:
       // For all other fields (stats, combine, etc.), render a number input
+      if (key === 'review' || !(key in ({} as FormValues))) {
+        return null;
+      }
+
       return (
         <Controller
-          name={String(key) as keyof FormValues}
+          name={key as string}
           control={control}
           render={({ field, fieldState }) => (
             <Form.Item
