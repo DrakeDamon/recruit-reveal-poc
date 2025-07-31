@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from 'antd';
 
-export function ReviewCard({ answers, onEdit, onSubmit, stepKeys }: { answers: Record<string, any>; onEdit: (step: number) => void; onSubmit: () => void; stepKeys: string[] }) {
+export function ReviewCard({ answers, onEdit, onSubmit, stepKeys, loading }: { answers: Record<string, any>; onEdit: (step: number) => void; onSubmit: () => void; stepKeys: string[]; loading?: boolean }) {
   return (
     <div className="p-4 border rounded-lg">
       <h3 className="font-semibold mb-2">Review Your Answers</h3>
@@ -13,7 +13,9 @@ export function ReviewCard({ answers, onEdit, onSubmit, stepKeys }: { answers: R
           <Button type="link" onClick={() => onEdit(i)}>Edit</Button>
         </div>
       ))}
-      <Button type="primary" onClick={onSubmit}>Submit</Button>
+      <Button type="primary" onClick={onSubmit} loading={loading}>
+        {loading ? 'Evaluating...' : 'Submit'}
+      </Button>
     </div>
   );
 }
