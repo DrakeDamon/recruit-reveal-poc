@@ -48,11 +48,16 @@ const mockEvalResult = {
     bench_press_imputed: true
   },
   data_completeness_warning: true,
-  feature_importance: {
-    speed_power_ratio: 0.2096,
-    ath_power: 0.1145,
-    combine_confidence: 0.0577
-  }
+      feature_importance: {
+      speed_power_ratio: 0.2096,
+      ath_power: 0.1145,
+      combine_confidence: 0.0577
+    },
+    explainability: {
+      speed_power_ratio: 0.2096,
+      ath_power: 0.1145,
+      combine_confidence: 0.0577
+    }
 };
 
 triggerPipeline.mockResolvedValue(mockEvalResult);
@@ -76,6 +81,13 @@ app.post(['/evaluate', '/api/evaluate'], async (req, res) => {
     const athleteData = athlete_data || req.body;
     const athletePosition = position || athleteData.position;
     const playerName = athleteData.Player_Name || athleteData.name || 'Unknown Player';
+
+    // Validate required fields
+    if (!playerName || playerName === 'Unknown Player') {
+      return res.status(400).json({
+        error: 'Player name is required for evaluation'
+      });
+    }
 
     if (!athletePosition) {
       return res.status(400).json({
@@ -236,7 +248,7 @@ describe('/evaluate endpoint', () => {
 
       expect(response.status).toBe(400);
       expect(response.body).toEqual({
-        error: 'Invalid input: athlete_data with position required'
+        error: 'Player name is required for evaluation'
       });
       
       expect(triggerPipeline).not.toHaveBeenCalled();

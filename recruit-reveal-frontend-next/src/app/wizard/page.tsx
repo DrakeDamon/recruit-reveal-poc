@@ -158,36 +158,97 @@ export default function WizardPage() {
   ];
   const [currentSteps, setCurrentSteps] = useState<{ key: keyof FormValues | 'review'; prompt: string }[]>(initialSteps);
 
-  // Initialize messages based on profile data
+  // Initialize messages and auto-fill form data based on profile
   useEffect(() => {
     if (profile && !profileLoading) {
+      // Use personalized welcome message for logged in users
+      const welcomeMessage = profile.name
+        ? `🏈 Welcome back, ${profile.name}! Ready to evaluate your potential?`
+        : '🏈 Welcome! Ready to evaluate your potential?';
+
       const initialMessages: { from: 'app' | 'user'; text: string }[] = [
-        { from: 'app', text: `🏈 Welcome back, ${profile.name}! Ready to evaluate your potential?` }
+        { from: 'app', text: welcomeMessage }
       ];
       setMessages(initialMessages);
       
-      // Pre-fill form with profile data
+      // Pre-fill form with ALL available profile data to avoid re-asking
+      const profileData: Partial<FormValues> = {};
+      let startStep = 0;
+
       if (profile.name) {
-        form.setValue('Player_Name', profile.name);
+        profileData.Player_Name = profile.name;
+        startStep = Math.max(startStep, 1); // Skip name question
       }
+
       if (profile.position) {
-        form.setValue('position', profile.position as 'QB' | 'RB' | 'WR');
+        profileData.position = profile.position as 'QB' | 'RB' | 'WR';
         setSelectedPosition(profile.position as 'QB' | 'RB' | 'WR');
+        startStep = Math.max(startStep, 2); // Skip position question
       }
+
       if (profile.graduation_year) {
-        form.setValue('grad_year', profile.graduation_year);
+        profileData.grad_year = profile.graduation_year;
+        startStep = Math.max(startStep, 3); // Skip grad year question
       }
+
       if (profile.state) {
-        form.setValue('state', profile.state);
+        profileData.state = profile.state;
+        startStep = Math.max(startStep, 4); // Skip state question
       }
+
       if (profile.height) {
-        form.setValue('height_inches', profile.height);
+        profileData.height_inches = profile.height;
       }
+
       if (profile.weight) {
-        form.setValue('weight_lbs', profile.weight);
+        profileData.weight_lbs = profile.weight;
+      }
+
+      // Set all the form values at once
+      Object.entries(profileData).forEach(([key, value]) => {
+        form.setValue(key as string, value);
+      });
+
+      // If we have position, update the steps for that position and skip to first unanswered question
+      if (profile.position) {
+        const positionSteps = buildSteps(profile.position as 'QB' | 'RB' | 'WR');
+        setCurrentSteps(positionSteps);
+
+        // Find the first step that hasn't been pre-filled
+        let nextStep = startStep;
+        while (nextStep < positionSteps.length && positionSteps[nextStep]) {
+          const stepKey = positionSteps[nextStep].key as keyof FormValues;
+          if (stepKey === 'review' || !profileData[stepKey]) {
+            break;
+          }
+          nextStep++;
+        }
+
+        setStep(nextStep);
+
+        // Show the appropriate next question prompt
+        if (nextStep < positionSteps.length && positionSteps[nextStep]) {
+          setTimeout(() => {
+            setMessages(prev => [...prev, { from: 'app', text: positionSteps[nextStep].prompt }]);
+          }, 300);
+        }
+      } else {
+        // No position set, start from where we left off
+        setStep(startStep);
+        if (startStep < initialSteps.length) {
+          setTimeout(() => {
+            setMessages(prev => [...prev, { from: 'app', text: initialSteps[startStep].prompt }]);
+          }, 300);
+        }
       }
     } else if (!profileLoading && needsProfileSetup) {
       setShowProfileSetup(true);
+    } else if (!profileLoading && !profile) {
+      // Not logged in - show generic welcome
+      const initialMessages: { from: 'app' | 'user'; text: string }[] = [
+        { from: 'app', text: '🏈 Welcome! Ready to evaluate your potential?' }
+      ];
+      setMessages(initialMessages);
     }
   }, [profile, profileLoading, needsProfileSetup, form]);
 

@@ -45,7 +45,19 @@ const positions = ['QB', 'RB', 'WR'] as const;
 const states = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'] as const;
 
 const InputBar: React.FC<InputBarProps> = ({ step, steps, onEnter }) => {
-  const { control } = useFormContext<FormValues>();
+  const { control, watch } = useFormContext<FormValues>();
+  
+  // Watch for step changes to clear input values after submission
+  const [inputValue, setInputValue] = React.useState('');
+  const [lastStep, setLastStep] = React.useState(step);
+  
+  // Clear input when step changes (indicates successful submission)
+  React.useEffect(() => {
+    if (step !== lastStep) {
+      setInputValue('');
+      setLastStep(step);
+    }
+  }, [step, lastStep]);
   
   // Get the current step configuration
   const currentStep = steps[step];
@@ -170,10 +182,18 @@ const InputBar: React.FC<InputBarProps> = ({ step, steps, onEnter }) => {
               className="w-full"
             >
               <Input
-                {...field}
+                value={field.value === undefined ? inputValue : field.value}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setInputValue(value);
+                  field.onChange(value ? Number(value) : undefined);
+                }}
                 type="number"
                 placeholder={`Enter ${String(key).replace(/_/g, ' ').toLowerCase()}`}
-                onPressEnter={onEnter}
+                onPressEnter={() => {
+                  onEnter();
+                  setInputValue('');
+                }}
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all"
               />
             </Form.Item>
