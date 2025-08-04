@@ -8,36 +8,47 @@ export type FormValues = {
   position: 'QB' | 'RB' | 'WR';
   grad_year: number;
   state: string;
-  // QB specific fields
+  // QB specific fields (stats)
+  senior_ypg?: number;
+  senior_tds?: number;
+  senior_comp_pct?: number;
+  senior_ypc?: number;
   senior_yds?: number;
   senior_cmp?: number;
   senior_att?: number;
   senior_int?: number;
   senior_td_passes?: number;
   junior_yds?: number;
-  // RB specific fields
+  junior_ypg?: number;
+  // RB specific fields (stats)
   senior_touches?: number;
   senior_avg?: number;
+  senior_rush_rec?: number;
+  senior_rush_rec_yds?: number;
+  senior_rush_td?: number;
+  senior_rush_yds?: number;
+  // WR specific fields (stats)
   senior_rec?: number;
   senior_rec_yds?: number;
-  senior_td?: number;
-  junior_ypg?: number;
-  // WR specific fields
+  senior_rec_td?: number;
   junior_rec?: number;
   junior_rec_yds?: number;
-  junior_td?: number;
-  // Common combine fields
-  dash40?: number;
-  vertical?: number;
-  shuttle?: number;
+  junior_rec_td?: number;
+  // Physical measurements
   height_inches?: number;
   weight_lbs?: number;
+  // Combine metrics (all optional - will be imputed by Synapse)
+  forty_yard_dash?: number;
+  vertical_jump?: number;
+  shuttle?: number;
+  broad_jump?: number;
+  bench_press?: number;
   [key: string]: string | number | undefined;
 };
 
 interface InputBarProps {
   step: number;
-  steps: { key: keyof FormValues | 'review'; prompt: string }[];
+  steps: { key: keyof FormValues | 'review'; prompt: string; category?: string }[];
   onEnter: () => void;
 }
 
@@ -166,7 +177,7 @@ const InputBar: React.FC<InputBarProps> = ({ step, steps, onEnter }) => {
 
     default:
       // For all other fields (stats, combine, etc.), render a number input
-      if (key === 'review' || !(key in ({} as FormValues))) {
+      if (key === 'review') {
         return null;
       }
 

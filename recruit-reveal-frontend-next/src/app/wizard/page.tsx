@@ -29,6 +29,7 @@ export type FormValues = {
   senior_cmp?: number;
   senior_att?: number;
   senior_int?: number;
+  senior_td_passes?: number;
   junior_yds?: number;
   junior_ypg?: number;
   // RB specific fields (stats)
@@ -40,10 +41,11 @@ export type FormValues = {
   senior_rush_yds?: number;
   // WR specific fields (stats)
   senior_rec?: number;
-  senior_td?: number;
+  senior_rec_yds?: number;
+  senior_rec_td?: number;
   junior_rec?: number;
   junior_rec_yds?: number;
-  junior_td?: number;
+  junior_rec_td?: number;
   // Physical measurements
   height_inches?: number;
   weight_lbs?: number;
@@ -97,58 +99,76 @@ export default function WizardPage() {
     }
   };
 
-  // Define position-specific steps
+  // Define which questions are settings (should be auto-skipped if profile has data)
+  const settingsFields = ['Player_Name', 'position', 'grad_year', 'state'];
+
+  // Define position-specific steps in strict order: [settings, stats, combine]
   const positionSteps = {
     QB: [
-      { key: 'Player_Name', prompt: getWelcomeMessage() },
-      { key: 'position', prompt: '🎯 Awesome! Which position do you play?' },
-      { key: 'grad_year', prompt: '📅 What year will you graduate and take the next step?' },
-      { key: 'state', prompt: '🗺️ Which state do you play in?' },
-      { key: 'senior_yds', prompt: '🚀 Let\'s dive into your senior year passing yards - show me those numbers!' },
-      { key: 'senior_cmp', prompt: '🎯 How many completions did you rack up in your senior year?' },
-      { key: 'senior_att', prompt: '💪 Total passing attempts in your senior season?' },
-      { key: 'senior_int', prompt: '📊 Senior year interceptions (every QB throws a few!)?' },
-      { key: 'senior_td_passes', prompt: '🔥 Senior year touchdown passes?' },
-      { key: 'junior_yds', prompt: '⭐ Junior year passing yards - building that foundation!' },
-      { key: 'forty_yard_dash', prompt: '💨 40-yard dash time - show me that speed!' },
-      { key: 'vertical_jump', prompt: '🦘 Vertical jump' },
-      { key: 'shuttle', prompt: '⚡ Shuttle time' },
-      { key: 'height_inches', prompt: '📏 Height' },
-      { key: 'weight_lbs', prompt: '⚖️ Weight' },
-      { key: 'review', prompt: '🌟 Ready to see your potential? Let\'s reveal your recruit profile!' }
+      // Settings (will be auto-skipped if profile has data)
+      { key: 'Player_Name', prompt: getWelcomeMessage(), category: 'settings' },
+      { key: 'position', prompt: '🎯 Awesome! Which position do you play?', category: 'settings' },
+      { key: 'grad_year', prompt: '📅 What year will you graduate and take the next step?', category: 'settings' },
+      { key: 'state', prompt: '🗺️ Which state do you play in?', category: 'settings' },
+      // Stats (never auto-skipped)
+      { key: 'senior_yds', prompt: '🚀 Let\'s dive into your senior year passing yards - show me those numbers!', category: 'stats' },
+      { key: 'senior_cmp', prompt: '🎯 How many completions did you rack up in your senior year?', category: 'stats' },
+      { key: 'senior_att', prompt: '💪 Total passing attempts in your senior season?', category: 'stats' },
+      { key: 'senior_int', prompt: '📊 Senior year interceptions (every QB throws a few!)?', category: 'stats' },
+      { key: 'senior_td_passes', prompt: '🔥 Senior year touchdown passes?', category: 'stats' },
+      { key: 'junior_yds', prompt: '⭐ Junior year passing yards - building that foundation!', category: 'stats' },
+      // Combine (never auto-skipped)
+      { key: 'forty_yard_dash', prompt: '💨 40-yard dash time - show me that speed!', category: 'combine' },
+      { key: 'vertical_jump', prompt: '🦘 Vertical jump', category: 'combine' },
+      { key: 'shuttle', prompt: '⚡ Shuttle time', category: 'combine' },
+      { key: 'height_inches', prompt: '📏 Height', category: 'combine' },
+      { key: 'weight_lbs', prompt: '⚖️ Weight', category: 'combine' },
+      { key: 'review', prompt: '🌟 Ready to see your potential? Let\'s reveal your recruit profile!', category: 'review' }
     ],
     RB: [
-      { key: 'Player_Name', prompt: getWelcomeMessage() },
-      { key: 'position', prompt: '🎯 Awesome! Which position do you play?' },
-      { key: 'grad_year', prompt: '📅 What year will you graduate and take the next step?' },
-      { key: 'state', prompt: '🗺️ Which state do you play in?' },
-      { key: 'senior_yds', prompt: '🏃‍♂️ Senior year rushing yards - how many yards did you rack up?' },
-      { key: 'senior_touches', prompt: '👐 Total touches' },
-      { key: 'senior_avg', prompt: '📊 Average yards per carry in your senior season?' },
-      { key: 'senior_rush_rec', prompt: '🤲 Senior year receptions - dual threat ability!' },
-      { key: 'senior_rush_rec_yds', prompt: '📡 Senior receiving yards' },
-      { key: 'senior_rush_td', prompt: '🏆 Total touchdowns in your senior year?' },
-      { key: 'junior_ypg', prompt: '⭐ Junior year yards per game - consistency matters!' },
-      { key: 'forty_yard_dash', prompt: '💨 40-yard dash time - show me that speed!' },
-      { key: 'vertical_jump', prompt: '🦘 Vertical jump' },
-      { key: 'shuttle', prompt: '⚡ Shuttle time' },
-      { key: 'height_inches', prompt: '📏 Height' },
-      { key: 'weight_lbs', prompt: '⚖️ Weight' },
-      { key: 'review', prompt: '🌟 Ready to see your potential? Let\'s reveal your recruit profile!' }
+      // Settings (will be auto-skipped if profile has data)
+      { key: 'Player_Name', prompt: getWelcomeMessage(), category: 'settings' },
+      { key: 'position', prompt: '🎯 Awesome! Which position do you play?', category: 'settings' },
+      { key: 'grad_year', prompt: '📅 What year will you graduate and take the next step?', category: 'settings' },
+      { key: 'state', prompt: '🗺️ Which state do you play in?', category: 'settings' },
+      // Stats (never auto-skipped)
+      { key: 'senior_rush_yds', prompt: '🏃‍♂️ Senior year rushing yards - how many yards did you rack up?', category: 'stats' },
+      { key: 'senior_touches', prompt: '👐 Total touches in your senior season', category: 'stats' },
+      { key: 'senior_avg', prompt: '📊 Average yards per carry in your senior season?', category: 'stats' },
+      { key: 'senior_rush_rec', prompt: '🤲 Senior year receptions - dual threat ability!', category: 'stats' },
+      { key: 'senior_rush_rec_yds', prompt: '📡 Senior receiving yards', category: 'stats' },
+      { key: 'senior_rush_td', prompt: '🏆 Total touchdowns in your senior year?', category: 'stats' },
+      { key: 'junior_ypg', prompt: '⭐ Junior year yards per game - consistency matters!', category: 'stats' },
+      // Combine (never auto-skipped)
+      { key: 'forty_yard_dash', prompt: '💨 40-yard dash time - show me that speed!', category: 'combine' },
+      { key: 'vertical_jump', prompt: '🦘 Vertical jump', category: 'combine' },
+      { key: 'shuttle', prompt: '⚡ Shuttle time', category: 'combine' },
+      { key: 'height_inches', prompt: '📏 Height', category: 'combine' },
+      { key: 'weight_lbs', prompt: '⚖️ Weight', category: 'combine' },
+      { key: 'review', prompt: '🌟 Ready to see your potential? Let\'s reveal your recruit profile!', category: 'review' }
     ],
     WR: [
-      { key: 'Player_Name', prompt: getWelcomeMessage() },
-      { key: 'position', prompt: '🎯 Awesome! Which position do you play?' },
-      { key: 'grad_year', prompt: '📅 What year will you graduate and take the next step?' },
-      { key: 'state', prompt: '🗺️ Which state do you play in?' },
-      { key: 'forty_yard_dash', prompt: '💨 40-yard dash time - show me that speed!' },
-      { key: 'vertical_jump', prompt: '🦘 Vertical jump' },
-      { key: 'shuttle', prompt: '⚡ Shuttle time' },
-      { key: 'height_inches', prompt: '📏 Height' },
-      { key: 'weight_lbs', prompt: '⚖️ Weight' },
-      { key: 'review', prompt: '🌟 Ready to see your potential? We\'ll analyze your combine metrics!' }
+      // Settings (will be auto-skipped if profile has data)
+      { key: 'Player_Name', prompt: getWelcomeMessage(), category: 'settings' },
+      { key: 'position', prompt: '🎯 Awesome! Which position do you play?', category: 'settings' },
+      { key: 'grad_year', prompt: '📅 What year will you graduate and take the next step?', category: 'settings' },
+      { key: 'state', prompt: '🗺️ Which state do you play in?', category: 'settings' },
+      // Stats (never auto-skipped)
+      { key: 'senior_rec', prompt: '🏈 Senior year receptions - show me those catches!', category: 'stats' },
+      { key: 'senior_rec_yds', prompt: '📏 Senior year receiving yards', category: 'stats' },
+      { key: 'senior_rec_td', prompt: '🎯 Senior year receiving touchdowns', category: 'stats' },
+      { key: 'junior_rec', prompt: '⭐ Junior year receptions', category: 'stats' },
+      { key: 'junior_rec_yds', prompt: '📊 Junior year receiving yards', category: 'stats' },
+      { key: 'junior_rec_td', prompt: '🔥 Junior year receiving touchdowns', category: 'stats' },
+      // Combine (never auto-skipped)
+      { key: 'forty_yard_dash', prompt: '💨 40-yard dash time - show me that speed!', category: 'combine' },
+      { key: 'vertical_jump', prompt: '🦘 Vertical jump', category: 'combine' },
+      { key: 'shuttle', prompt: '⚡ Shuttle time', category: 'combine' },
+      { key: 'height_inches', prompt: '📏 Height', category: 'combine' },
+      { key: 'weight_lbs', prompt: '⚖️ Weight', category: 'combine' },
+      { key: 'review', prompt: '🌟 Ready to see your potential? We\'ll analyze your combine metrics!', category: 'review' }
     ],
-    DEFAULT: [] as { key: keyof FormValues | 'review'; prompt: string }[]
+    DEFAULT: [] as { key: keyof FormValues | 'review'; prompt: string; category: string }[]
   };
 
   // Initialize with first few universal steps before position selection
@@ -156,7 +176,7 @@ export default function WizardPage() {
     { key: 'Player_Name' as keyof FormValues, prompt: getWelcomeMessage() },
     { key: 'position' as keyof FormValues, prompt: '🎯 Awesome! Which position do you play?' }
   ];
-  const [currentSteps, setCurrentSteps] = useState<{ key: keyof FormValues | 'review'; prompt: string }[]>(initialSteps);
+  const [currentSteps, setCurrentSteps] = useState<{ key: keyof FormValues | 'review'; prompt: string; category: string }[]>(initialSteps.map(step => ({ ...step, category: 'settings' })));
 
   // Initialize messages and auto-fill form data based on profile
   useEffect(() => {
@@ -209,30 +229,37 @@ export default function WizardPage() {
         form.setValue(key as string, value);
       });
 
-      // If we have position, update the steps for that position and skip to first unanswered question
-      if (profile.position) {
-        const positionSteps = buildSteps(profile.position as 'QB' | 'RB' | 'WR');
-        setCurrentSteps(positionSteps);
+              // If we have position, update the steps for that position and skip ONLY to first stat question
+        if (profile.position) {
+          const positionStepsList = buildSteps(profile.position as 'QB' | 'RB' | 'WR');
+          setCurrentSteps(positionStepsList);
 
-        // Find the first step that hasn't been pre-filled
-        let nextStep = startStep;
-        while (nextStep < positionSteps.length && positionSteps[nextStep]) {
-          const stepKey = positionSteps[nextStep].key as keyof FormValues;
-          if (stepKey === 'review' || !profileData[stepKey]) {
-            break;
+          // Find first stats question (never skip stats/combine, only settings)
+          let nextStep = 0;
+          for (let i = 0; i < positionStepsList.length; i++) {
+            const step = positionStepsList[i];
+            if (step.category === 'stats') {
+              nextStep = i;
+              break;
+            }
+            // Only skip settings that have profile data
+            if (step.category === 'settings' && profileData[step.key as keyof FormValues]) {
+              continue;
+            } else if (step.category === 'settings') {
+              nextStep = i;
+              break;
+            }
           }
-          nextStep++;
-        }
 
-        setStep(nextStep);
+          setStep(nextStep);
 
-        // Show the appropriate next question prompt
-        if (nextStep < positionSteps.length && positionSteps[nextStep]) {
-          setTimeout(() => {
-            setMessages(prev => [...prev, { from: 'app', text: positionSteps[nextStep].prompt }]);
-          }, 300);
-        }
-      } else {
+          // Show the first stats question prompt
+          if (nextStep < positionStepsList.length && positionStepsList[nextStep]) {
+            setTimeout(() => {
+              setMessages(prev => [...prev, { from: 'app', text: positionStepsList[nextStep].prompt }]);
+            }, 300);
+          }
+        } else {
         // No position set, start from where we left off
         setStep(startStep);
         if (startStep < initialSteps.length) {
@@ -407,7 +434,7 @@ export default function WizardPage() {
             {/* Debug info - remove in production */}
             {process.env.NODE_ENV === 'development' && (
               <div className="text-xs text-gray-500 mb-2">
-                Step: {step}, Steps length: {currentSteps.length}, Current step key: {currentSteps[step]?.key}
+                                  Step: {step}, Steps length: {currentSteps.length}, Current step key: {currentSteps[step]?.key}, Current step category: {currentSteps[step]?.category}
               </div>
             )}
             
