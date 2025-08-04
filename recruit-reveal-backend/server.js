@@ -110,39 +110,76 @@ app.get('/eval/history', async (req, res) => {
   }
 });
 
-app.post('/evaluate', async (req, res) => {
+app.post(['/evaluate', '/api/evaluate'], async (req, res) => {
   try {
-    const athlete_data = req.body.athlete_data;
-    if (!athlete_data || !athlete_data.Player_Name || !athlete_data.position) {
-      return res.status(400).json({ error: 'Invalid input: Player_Name and position required' });
-    }
-    
-    // Create a test user if it doesn't exist, or use existing one
-    let user = await prisma.user.findFirst({ where: { email: 'test@example.com' } });
-    if (!user) {
-      user = await prisma.user.create({ 
-        data: { 
-          email: 'test@example.com', 
-          password_hash: await bcrypt.hash('test123', 10) 
-        } 
+    const { athlete_data, position, user_id } = req.body;
+
+    // Validate required data
+    if (!athlete_data && !position) {
+      return res.status(400).json({
+        error: 'Invalid input: athlete_data with position required'
       });
     }
-    const user_id = user.id; // Now using integer ID instead of string
-    const position = athlete_data.position;
-    console.log('Triggering pipeline:', process.env.AZURE_PIPELINE_NAME, 'for position:', position);
-    
+
+    // Handle both old and new request formats
+    const athleteData = athlete_data || req.body;
+    const athletePosition = position || athleteData.position;
+    const playerName = athleteData.Player_Name || athleteData.name || 'Unknown Player';
+
+    if (!athletePosition) {
+      return res.status(400).json({
+        error: 'Position is required for evaluation'
+      });
+    }
+
+    // Use provided user_id or create/find test user
+    let evaluationUserId = user_id;
+    if (!evaluationUserId) {
+      let user = await prisma.user.findFirst({ where: { email: 'test@example.com' } });
+      if (!user) {
+        user = await prisma.user.create({
+          data: {
+            email: 'test@example.com',
+            password_hash: await bcrypt.hash('test123', 10)
+          }
+        });
+      }
+      evaluationUserId = user.id;
+    }
+
+    console.log('Triggering pipeline for position:', athletePosition);
+
     const result = await triggerPipeline({
-      notebookName: process.env.AZURE_NOTEBOOK_NAME,
-      pipelineParameters: { position, athlete_data }
+      notebookName: process.env.AZURE_NOTEBOOK_NAME || process.env.AZURE_PIPELINE_NAME,
+      pipelineParameters: {
+        position: athletePosition,
+        athlete_data: athleteData
+      }
     });
-    
-    // Skip database save in mock mode to avoid foreign key issues
+
+    // Add imputation flags to response (will be populated by Synapse pipeline)
+    const enhancedResult = {
+      ...result,
+      predicted_division: result.predicted_tier,
+      confidence_score: result.probability,
+      feature_importance: result.explainability || {},
+      imputation_flags: {
+        forty_yard_dash_imputed: false,
+        vertical_jump_imputed: false,
+        shuttle_imputed: false,
+        broad_jump_imputed: false,
+        bench_press_imputed: false
+      },
+      data_completeness_warning: false
+    };
+
+    // Save evaluation to database
     if (process.env.MOCK_SYNAPSE !== 'true') {
       await prisma.eval.create({
         data: {
-          user_id,
-          player_name: athlete_data.Player_Name,
-          position,
+          user_id: evaluationUserId,
+          player_name: playerName,
+          position: athletePosition,
           score: result.score,
           division: result.predicted_tier,
           notes: result.notes,
@@ -157,10 +194,14 @@ app.post('/evaluate', async (req, res) => {
         }
       });
     }
-    res.json(result);
+
+    res.json(enhancedResult);
   } catch (err) {
     console.error('Evaluate error:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      error: err.message,
+      details: 'Failed to process athlete evaluation'
+    });
   }
 });
 

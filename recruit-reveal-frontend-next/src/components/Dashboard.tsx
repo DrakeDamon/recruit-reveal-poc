@@ -14,8 +14,10 @@ mixpanel.init('YOUR_TOKEN'); // optional analytics
 interface EvalData {
   score: number;
   predicted_tier: string;
+  predicted_division?: string;
   notes?: string;
   probability: number;
+  confidence_score?: number;
   performance_score: number;
   combine_score: number;
   upside_score: number;
@@ -23,8 +25,19 @@ interface EvalData {
   goals: string[];
   switches?: string;
   calendar_advice?: string;
-  position?: 'QB' | 'RB' | 'WR';  // Position-specific display logic
-  playerName?: string;  // Display player name in results
+  position?: 'QB' | 'RB' | 'WR';
+  playerName?: string;
+  // Imputation and explainability fields
+  imputation_flags?: {
+    forty_yard_dash_imputed?: boolean;
+    vertical_jump_imputed?: boolean;
+    shuttle_imputed?: boolean;
+    broad_jump_imputed?: boolean;
+    bench_press_imputed?: boolean;
+  };
+  data_completeness_warning?: boolean;
+  feature_importance?: Record<string, number>;
+  explainability?: Record<string, any>;
 }
 
 export default function Dashboard({ evalData }: { evalData: EvalData | null }) {
@@ -68,6 +81,26 @@ export default function Dashboard({ evalData }: { evalData: EvalData | null }) {
       return 'Based on combine metrics only (full WR analysis coming soon)';
     }
     return `Comprehensive ${getPositionDisplayName()} evaluation`;
+  };
+
+  // Check if any combine data was imputed
+  const hasImputedData = evalData!.imputation_flags &&
+    Object.values(evalData!.imputation_flags).some(flag => flag);
+
+  // Get list of imputed fields for display
+  const getImputedFields = () => {
+    if (!evalData!.imputation_flags) return [];
+    return Object.entries(evalData!.imputation_flags)
+      .filter(([_, imputed]) => imputed)
+      .map(([field, _]) => field.replace('_imputed', '').replace('_', ' ').toLowerCase());
+  };
+
+  // Get confidence level based on imputation and confidence score
+  const getConfidenceLevel = () => {
+    const confidence = evalData!.confidence_score || evalData!.probability;
+    if (hasImputedData && confidence < 0.7) return 'low';
+    if (hasImputedData && confidence < 0.8) return 'medium';
+    return 'high';
   };
 
   const handleShare = async (platform: 'tiktok' | 'ig') => {
@@ -117,6 +150,34 @@ export default function Dashboard({ evalData }: { evalData: EvalData | null }) {
             {darkMode ? 'Light Mode' : 'Dark Mode'}
           </Button>
         </div>
+
+        {/* Data Completeness Warning */}
+        {(hasImputedData || evalData!.data_completeness_warning) && (
+          <Alert
+            message="Evaluation Subject to Change"
+            description={
+              <div>
+                <p>
+                  <strong>This evaluation may be inaccurate by a division due to incomplete athlete data.</strong>
+                  {' '}For the most accurate results, please submit official combine times and verified stats.
+                </p>
+                {getImputedFields().length > 0 && (
+                  <p className="mt-2">
+                    <strong>Missing data filled with estimates:</strong> {getImputedFields().join(', ')}
+                  </p>
+                )}
+                <p className="mt-2">
+                  <strong>Confidence Level:</strong> {getConfidenceLevel().toUpperCase()}
+                  {getConfidenceLevel() === 'low' && ' - Consider providing more complete data for better accuracy'}
+                </p>
+              </div>
+            }
+            type="warning"
+            showIcon
+            className="mb-4"
+          />
+        )}
+
         <Row gutter={[16, 16]}>
           {/* Top metrics */}
           <Col xs={24} md={12} lg={6}>
@@ -124,10 +185,15 @@ export default function Dashboard({ evalData }: { evalData: EvalData | null }) {
               title="Overall Division Fit"
               className="bg-[var(--bg-primary)] border-[var(--accent)]"
             >
-              <Progress type="dashboard" percent={Math.round(evalData!.probability * 100)} />
+              <Progress type="dashboard" percent={Math.round((evalData!.confidence_score || evalData!.probability) * 100)} />
               {evalData!.underdog_bonus && (
                 <Tag color="magenta" className="mt-2">
                   Underdog +{evalData!.underdog_bonus} pt
+                </Tag>
+              )}
+              {hasImputedData && (
+                <Tag color="orange" className="mt-2">
+                  ⚠️ Estimated data used
                 </Tag>
               )}
             </Card>

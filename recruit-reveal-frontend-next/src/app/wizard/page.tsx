@@ -20,30 +20,39 @@ export type FormValues = {
   position: 'QB' | 'RB' | 'WR';
   grad_year: number;
   state: string;
-  // QB specific fields
+  // QB specific fields (stats)
+  senior_ypg?: number;
+  senior_tds?: number;
+  senior_comp_pct?: number;
+  senior_ypc?: number;
   senior_yds?: number;
   senior_cmp?: number;
   senior_att?: number;
   senior_int?: number;
-  senior_td_passes?: number;
   junior_yds?: number;
-  // RB specific fields
+  junior_ypg?: number;
+  // RB specific fields (stats)
   senior_touches?: number;
   senior_avg?: number;
+  senior_rush_rec?: number;
+  senior_rush_rec_yds?: number;
+  senior_rush_td?: number;
+  senior_rush_yds?: number;
+  // WR specific fields (stats)
   senior_rec?: number;
-  senior_rec_yds?: number;
   senior_td?: number;
-  junior_ypg?: number;
-  // WR specific fields
   junior_rec?: number;
   junior_rec_yds?: number;
   junior_td?: number;
-  // Common combine fields
-  dash40?: number;
-  vertical?: number;
-  shuttle?: number;
+  // Physical measurements
   height_inches?: number;
   weight_lbs?: number;
+  // Combine metrics (all optional - will be imputed by Synapse)
+  forty_yard_dash?: number;
+  vertical_jump?: number;
+  shuttle?: number;
+  broad_jump?: number;
+  bench_press?: number;
   [key: string]: string | number | undefined;
 };
 
@@ -101,8 +110,8 @@ export default function WizardPage() {
       { key: 'senior_int', prompt: '📊 Senior year interceptions (every QB throws a few!)?' },
       { key: 'senior_td_passes', prompt: '🔥 Senior year touchdown passes?' },
       { key: 'junior_yds', prompt: '⭐ Junior year passing yards - building that foundation!' },
-      { key: 'dash40', prompt: '💨 40-yard dash time - show me that speed!' },
-      { key: 'vertical', prompt: '🦘 Vertical jump' },
+      { key: 'forty_yard_dash', prompt: '💨 40-yard dash time - show me that speed!' },
+      { key: 'vertical_jump', prompt: '🦘 Vertical jump' },
       { key: 'shuttle', prompt: '⚡ Shuttle time' },
       { key: 'height_inches', prompt: '📏 Height' },
       { key: 'weight_lbs', prompt: '⚖️ Weight' },
@@ -116,12 +125,12 @@ export default function WizardPage() {
       { key: 'senior_yds', prompt: '🏃‍♂️ Senior year rushing yards - how many yards did you rack up?' },
       { key: 'senior_touches', prompt: '👐 Total touches' },
       { key: 'senior_avg', prompt: '📊 Average yards per carry in your senior season?' },
-      { key: 'senior_rec', prompt: '🤲 Senior year receptions - dual threat ability!' },
-      { key: 'senior_rec_yds', prompt: '📡 Senior receiving yards' },
-      { key: 'senior_td', prompt: '🏆 Total touchdowns in your senior year?' },
+      { key: 'senior_rush_rec', prompt: '🤲 Senior year receptions - dual threat ability!' },
+      { key: 'senior_rush_rec_yds', prompt: '📡 Senior receiving yards' },
+      { key: 'senior_rush_td', prompt: '🏆 Total touchdowns in your senior year?' },
       { key: 'junior_ypg', prompt: '⭐ Junior year yards per game - consistency matters!' },
-      { key: 'dash40', prompt: '💨 40-yard dash time - show me that speed!' },
-      { key: 'vertical', prompt: '🦘 Vertical jump' },
+      { key: 'forty_yard_dash', prompt: '💨 40-yard dash time - show me that speed!' },
+      { key: 'vertical_jump', prompt: '🦘 Vertical jump' },
       { key: 'shuttle', prompt: '⚡ Shuttle time' },
       { key: 'height_inches', prompt: '📏 Height' },
       { key: 'weight_lbs', prompt: '⚖️ Weight' },
@@ -132,8 +141,8 @@ export default function WizardPage() {
       { key: 'position', prompt: '🎯 Awesome! Which position do you play?' },
       { key: 'grad_year', prompt: '📅 What year will you graduate and take the next step?' },
       { key: 'state', prompt: '🗺️ Which state do you play in?' },
-      { key: 'dash40', prompt: '💨 40-yard dash time - show me that speed!' },
-      { key: 'vertical', prompt: '🦘 Vertical jump' },
+      { key: 'forty_yard_dash', prompt: '💨 40-yard dash time - show me that speed!' },
+      { key: 'vertical_jump', prompt: '🦘 Vertical jump' },
       { key: 'shuttle', prompt: '⚡ Shuttle time' },
       { key: 'height_inches', prompt: '📏 Height' },
       { key: 'weight_lbs', prompt: '⚖️ Weight' },
