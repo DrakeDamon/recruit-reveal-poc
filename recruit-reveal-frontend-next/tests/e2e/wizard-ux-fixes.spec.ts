@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Wizard UX Bug Fixes', () => {
+test.describe('Wizard UX Bug Fixes - Critical Issues Resolved', () => {
   test.beforeEach(async ({ page }) => {
     // Mock the API endpoints
     await page.route('/api/profile/get*', async route => {
@@ -46,7 +46,7 @@ test.describe('Wizard UX Bug Fixes', () => {
     });
   });
 
-  test('Bug Fix 1: Auto-fill profile data and skip redundant questions', async ({ page }) => {
+  test('Bug Fix 1: Auto-fill profile data and skip only questions with actual answers', async ({ page }) => {
     // Navigate to wizard page
     await page.goto('/wizard');
 
@@ -56,27 +56,44 @@ test.describe('Wizard UX Bug Fixes', () => {
     // Check that welcome message is personalized for logged in user
     await expect(page.locator('text=🏈 Welcome back, John Doe! Ready to evaluate your potential?')).toBeVisible();
 
-    // Verify that basic profile questions are skipped
-    // Should not see name input since it's pre-filled
+    // Verify that ONLY questions with actual profile answers are skipped
+    // Name should be skipped since profile.name = 'John Doe'
     await expect(page.locator('input[placeholder="Enter your name"]')).not.toBeVisible();
 
-    // Should not see position selector since it's pre-filled
+    // Position should be skipped since profile.position = 'QB'  
     await expect(page.locator('text=Select position')).not.toBeVisible();
 
-    // Should start from first unanswered question (likely stats)
-    // For QB, should see senior year passing yards question
+    // Graduation year should be skipped since profile.graduation_year = 2025
+    // State should be skipped since profile.state = 'TX'
+    // Height should be pre-filled since profile.height = 72
+    // Weight should be pre-filled since profile.weight = 195
+
+    // Should start from first unanswered question - QB stats (not pre-filled in profile)
     await expect(page.locator('text=🚀 Let\'s dive into your senior year passing yards')).toBeVisible();
 
-    // Verify form is pre-filled with profile data
-    const nameField = await page.evaluate(() => {
+    // Verify form is pre-filled with ONLY the profile data that exists
+    const formData = await page.evaluate(() => {
       const form = document.querySelector('form');
       if (form) {
-        const formData = new FormData(form);
-        return formData.get('Player_Name');
+        const data = new FormData(form);
+        return {
+          name: data.get('Player_Name'),
+          position: data.get('position'), 
+          gradYear: data.get('grad_year'),
+          state: data.get('state'),
+          height: data.get('height_inches'),
+          weight: data.get('weight_lbs')
+        };
       }
       return null;
     });
-    expect(nameField).toBe('John Doe');
+    
+    expect(formData.name).toBe('John Doe');
+    expect(formData.position).toBe('QB');
+    expect(formData.gradYear).toBe('2025');
+    expect(formData.state).toBe('TX');
+    expect(formData.height).toBe('72');
+    expect(formData.weight).toBe('195');
   });
 
   test('Bug Fix 2: Input bar clears after submission', async ({ page }) => {
@@ -216,6 +233,45 @@ test.describe('Wizard UX Bug Fixes', () => {
 
     // Should redirect to dashboard
     await expect(page).toHaveURL('/dashboard');
+  });
+
+  test('Smart question skipping - only skip questions with actual profile data', async ({ page }) => {
+    // Mock partial profile data (some fields missing)
+    await page.route('/api/profile/get*', async route => {
+      await route.fulfill({
+        json: {
+          id: 1,
+          email: 'partial@example.com',
+          name: 'Partial User',
+          position: 'WR',
+          // Missing: graduation_year, state, height, weight
+          profile_complete: false
+        }
+      });
+    });
+
+    await page.goto('/wizard');
+    await page.waitForTimeout(500);
+
+    // Check personalized welcome message
+    await expect(page.locator('text=🏈 Welcome back, Partial User! Ready to evaluate your potential?')).toBeVisible();
+
+    // Name should be skipped (has value)
+    await expect(page.locator('input[placeholder="Enter your name"]')).not.toBeVisible();
+
+    // Position should be skipped (has value)
+    await expect(page.locator('text=Select position')).not.toBeVisible();
+
+    // Should start from first missing field - graduation year
+    await expect(page.locator('text=📅 What year will you graduate')).toBeVisible();
+
+    // Fill graduation year and move to next unanswered question
+    await page.fill('input[type="number"]', '2025');
+    await page.click('button:has-text("Next")');
+    await page.waitForTimeout(300);
+
+    // Should move to state question (missing in profile)
+    await expect(page.locator('text=🗺️ Which state do you play in?')).toBeVisible();
   });
 
   test('Non-logged in user gets generic welcome message', async ({ page }) => {
