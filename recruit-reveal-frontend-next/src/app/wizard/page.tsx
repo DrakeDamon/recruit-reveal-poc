@@ -155,12 +155,9 @@ export default function WizardPage() {
     DEFAULT: [] as { key: keyof FormValues | 'review'; prompt: string; category: string }[]
   };
 
-  // Initialize with first few universal steps before position selection
-  const initialSteps = [
-    { key: 'Player_Name' as keyof FormValues, prompt: getWelcomeMessage() },
-    { key: 'position' as keyof FormValues, prompt: '🎯 Awesome! Which position do you play?' }
-  ];
-  const [currentSteps, setCurrentSteps] = useState<{ key: keyof FormValues | 'review'; prompt: string; category: string }[]>(initialSteps.map(step => ({ ...step, category: 'settings' })));
+  // Initialize with empty steps - will be set based on authentication status
+  const [currentSteps, setCurrentSteps] = useState<{ key: keyof FormValues | 'review'; prompt: string; category: string }[]>([]);
+  const [inputClearTrigger, setInputClearTrigger] = useState(0);
 
   // Initialize messages and auto-fill form data based on profile
   useEffect(() => {
@@ -244,22 +241,34 @@ export default function WizardPage() {
             }, 300);
           }
         } else {
-        // No position set, start from where we left off
-        setStep(startStep);
-        if (startStep < initialSteps.length) {
-          setTimeout(() => {
-            setMessages(prev => [...prev, { from: 'app', text: initialSteps[startStep].prompt }]);
-          }, 300);
+          // No position set, initialize with basic steps
+          const basicSteps = [
+            { key: 'Player_Name' as keyof FormValues, prompt: getWelcomeMessage(), category: 'settings' },
+            { key: 'position' as keyof FormValues, prompt: '🎯 Awesome! Which position do you play?', category: 'settings' }
+          ];
+          setCurrentSteps(basicSteps);
+          setStep(startStep);
+          if (startStep < basicSteps.length) {
+            setTimeout(() => {
+              setMessages(prev => [...prev, { from: 'app', text: basicSteps[startStep].prompt }]);
+            }, 300);
+          }
         }
-      }
     } else if (!profileLoading && needsProfileSetup) {
       setShowProfileSetup(true);
     } else if (!profileLoading && !profile) {
-      // Not logged in - show generic welcome
+      // Not logged in - show generic welcome and initialize basic steps
       const initialMessages: { from: 'app' | 'user'; text: string }[] = [
         { from: 'app', text: '🏈 Welcome! Ready to evaluate your potential?' }
       ];
       setMessages(initialMessages);
+      
+      // Initialize with basic steps for non-logged in users
+      const basicSteps = [
+        { key: 'Player_Name' as keyof FormValues, prompt: getWelcomeMessage(), category: 'settings' },
+        { key: 'position' as keyof FormValues, prompt: '🎯 Awesome! Which position do you play?', category: 'settings' }
+      ];
+      setCurrentSteps(basicSteps);
     }
   }, [profile, profileLoading, needsProfileSetup, form]);
 
@@ -331,6 +340,9 @@ export default function WizardPage() {
 
     const nextStep = step + 1;
     setStep(nextStep);
+    
+    // Trigger input clearing
+    setInputClearTrigger(prev => prev + 1);
 
     // Show next question prompt with slight delay for better UX
     if (nextStep < currentSteps.length) {
@@ -430,6 +442,7 @@ export default function WizardPage() {
                 step={step}
                 steps={currentSteps}
                 onEnter={handleNext}
+                onInputClear={() => setInputClearTrigger(prev => prev + 1)}
               />
             )}
           </div>

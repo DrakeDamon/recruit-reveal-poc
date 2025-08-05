@@ -50,13 +50,31 @@ interface InputBarProps {
   step: number;
   steps: { key: keyof FormValues | 'review'; prompt: string; category?: string }[];
   onEnter: () => void;
+  onInputClear?: () => void;
 }
 
 const positions = ['QB', 'RB', 'WR'] as const;
 const states = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'] as const;
 
-const InputBar: React.FC<InputBarProps> = ({ step, steps, onEnter }) => {
+const InputBar: React.FC<InputBarProps> = ({ step, steps, onEnter, onInputClear }) => {
   const { control, watch } = useFormContext<FormValues>();
+  const [inputValue, setInputValue] = React.useState('');
+  const [lastStep, setLastStep] = React.useState(step);
+  
+  // Clear input when step changes (indicates successful submission)
+  React.useEffect(() => {
+    if (step !== lastStep) {
+      setInputValue('');
+      setLastStep(step);
+    }
+  }, [step, lastStep]);
+  
+  // Clear input when onInputClear is called
+  React.useEffect(() => {
+    if (onInputClear) {
+      setInputValue('');
+    }
+  }, [onInputClear]);
   
   // Get the current step configuration
   const currentStep = steps[step];
@@ -81,9 +99,20 @@ const InputBar: React.FC<InputBarProps> = ({ step, steps, onEnter }) => {
             >
               <Input 
                 {...field} 
+                value={inputValue !== '' ? inputValue : (field.value || '')}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setInputValue(value);
+                  field.onChange(value);
+                }}
                 placeholder="Enter your name" 
                 autoFocus 
-                onPressEnter={onEnter}
+                onPressEnter={() => {
+                  onEnter();
+                  setInputValue('');
+                  // Also clear the form field to prevent override
+                  field.onChange(undefined);
+                }}
                 className="form-input"
               />
             </Form.Item>
@@ -104,7 +133,12 @@ const InputBar: React.FC<InputBarProps> = ({ step, steps, onEnter }) => {
               help={fieldState.error?.message}
               className="w-full"
             >
-              <Select {...field} placeholder="Select position" showSearch onKeyDown={(e) => e.key === 'Enter' && onEnter()}>
+              <Select 
+                {...field} 
+                placeholder="Select position" 
+                showSearch 
+                onKeyDown={(e) => e.key === 'Enter' && onEnter()}
+              >
                 {positions.map((pos) => (
                   <Select.Option key={pos} value={pos}>
                     {pos}
@@ -129,7 +163,23 @@ const InputBar: React.FC<InputBarProps> = ({ step, steps, onEnter }) => {
               help={fieldState.error?.message}
               className="w-full"
             >
-              <Input {...field} type="number" placeholder="e.g., 2026" onPressEnter={onEnter} />
+              <Input 
+                {...field} 
+                value={inputValue !== '' ? inputValue : (field.value || '')}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setInputValue(value);
+                  field.onChange(value ? Number(value) : undefined);
+                }}
+                type="number" 
+                placeholder="e.g., 2026" 
+                onPressEnter={() => {
+                  onEnter();
+                  setInputValue('');
+                  // Also clear the form field to prevent override
+                  field.onChange(undefined);
+                }} 
+              />
             </Form.Item>
           )}
         />
@@ -148,7 +198,12 @@ const InputBar: React.FC<InputBarProps> = ({ step, steps, onEnter }) => {
               help={fieldState.error?.message}
               className="w-full"
             >
-              <Select {...field} placeholder="Select state" showSearch onKeyDown={(e) => e.key === 'Enter' && onEnter()}>
+              <Select 
+                {...field} 
+                placeholder="Select state" 
+                showSearch 
+                onKeyDown={(e) => e.key === 'Enter' && onEnter()}
+              >
                 {states.map((st) => (
                   <Select.Option key={st} value={st}>
                     {st}
@@ -186,9 +241,10 @@ const InputBar: React.FC<InputBarProps> = ({ step, steps, onEnter }) => {
             >
               <Input
                 {...field}
-                value={field.value || ''}
+                value={inputValue !== '' ? inputValue : (field.value || '')}
                 onChange={(e) => {
                   const value = e.target.value;
+                  setInputValue(value);
                   // Convert to number for numeric fields, keep as string for text fields
                   if (key === 'Player_Name') {
                     field.onChange(value);
@@ -199,7 +255,12 @@ const InputBar: React.FC<InputBarProps> = ({ step, steps, onEnter }) => {
                 type={key === 'Player_Name' ? 'text' : 'number'}
                 placeholder={placeholder}
                 autoFocus
-                onPressEnter={onEnter}
+                onPressEnter={() => {
+                  onEnter();
+                  setInputValue('');
+                  // Also clear the form field to prevent override
+                  field.onChange(undefined);
+                }}
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all"
               />
             </Form.Item>
