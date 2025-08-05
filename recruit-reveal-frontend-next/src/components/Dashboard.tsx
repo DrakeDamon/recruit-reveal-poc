@@ -38,6 +38,23 @@ interface EvalData {
   data_completeness_warning?: boolean;
   feature_importance?: Record<string, number>;
   explainability?: Record<string, any>;
+  // What If and Progress simulation results
+  what_if_results?: {
+    [stat: string]: {
+      to_next_div: string;
+      next_div_name: string;
+      next_prob: number;
+      stat_label: string;
+    };
+  };
+  progress_results?: {
+    [stat: string]: {
+      progress_to_next: string;
+      improvement_needed: string;
+      next_division: string;
+      current_value: number;
+    };
+  };
 }
 
 export default function Dashboard({ evalData }: { evalData: EvalData | null }) {
@@ -262,6 +279,63 @@ export default function Dashboard({ evalData }: { evalData: EvalData | null }) {
             )}
           </Col>
         </Row>
+
+        {/* What If Simulation Results */}
+        {evalData!.what_if_results && (
+          <Card title="🎯 What If Simulation - Reach Next Division" className="mb-4">
+            <p className="text-sm text-gray-600 mb-4">
+              See exactly what improvements you need to reach the next division level
+            </p>
+            <Row gutter={[16, 16]}>
+              {Object.entries(evalData!.what_if_results).map(([stat, result]) => (
+                <Col xs={24} sm={12} md={8} key={stat}>
+                  <Card size="small" className="text-center">
+                    <div className="text-lg font-semibold text-blue-600">
+                      {result.to_next_div}
+                    </div>
+                    <div className="text-sm text-gray-600">{result.stat_label}</div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      → {result.next_div_name} ({Math.round(result.next_prob * 100)}% confidence)
+                    </div>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+          </Card>
+        )}
+
+        {/* Progress Simulation Results */}
+        {evalData!.progress_results && (
+          <Card title="📈 Division Progress Tracker" className="mb-4">
+            <p className="text-sm text-gray-600 mb-4">
+              Track your progress toward the next division level
+            </p>
+            <Row gutter={[16, 16]}>
+              {Object.entries(evalData!.progress_results).map(([stat, result]) => (
+                <Col xs={24} sm={12} md={8} key={stat}>
+                  <Card size="small">
+                    <div className="mb-2">
+                      <div className="text-sm font-semibold capitalize">
+                        {stat.replace(/_/g, ' ')}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        Current: {result.current_value}
+                      </div>
+                    </div>
+                    <Progress
+                      percent={parseFloat(result.progress_to_next)}
+                      size="small"
+                      status="active"
+                    />
+                    <div className="text-xs text-gray-600 mt-1">
+                      {result.improvement_needed} to reach {result.next_division}
+                    </div>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+          </Card>
+        )}
 
         {/* Recruiting Calendar */}
         <Card title="Recruiting Calendar">

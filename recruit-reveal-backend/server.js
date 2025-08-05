@@ -112,7 +112,7 @@ app.get('/eval/history', async (req, res) => {
 
 app.post(['/evaluate', '/api/evaluate'], async (req, res) => {
   try {
-    const { athlete_data, position, user_id } = req.body;
+    const { athlete_data, position, user_id, user_email } = req.body;
 
     // Validate required data
     if (!athlete_data && !position) {
@@ -132,9 +132,27 @@ app.post(['/evaluate', '/api/evaluate'], async (req, res) => {
       });
     }
 
-    // Use provided user_id or create/find test user
+    // Use provided user_id or find/create user by email
     let evaluationUserId = user_id;
-    if (!evaluationUserId) {
+    if (!evaluationUserId && user_email) {
+      // Find or create user by email
+      console.log(`🔍 Looking for user with email: ${user_email}`);
+      let user = await prisma.user.findFirst({ where: { email: user_email } });
+      if (!user) {
+        console.log(`👤 Creating new user for email: ${user_email}`);
+        user = await prisma.user.create({
+          data: {
+            email: user_email,
+            password_hash: await bcrypt.hash('temp123', 10) // Temp password for OAuth users
+          }
+        });
+      } else {
+        console.log(`✅ Found existing user: ${user.id} (${user.email})`);
+      }
+      evaluationUserId = user.id;
+    } else if (!evaluationUserId) {
+      // Fallback to test user only if no email provided
+      console.log(`⚠️ No user_id or email provided, using test user`);
       let user = await prisma.user.findFirst({ where: { email: 'test@example.com' } });
       if (!user) {
         user = await prisma.user.create({
@@ -173,8 +191,8 @@ app.post(['/evaluate', '/api/evaluate'], async (req, res) => {
       data_completeness_warning: false
     };
 
-    // Save evaluation to database
-    if (process.env.MOCK_SYNAPSE !== 'true') {
+    // Save evaluation to database (always save, regardless of mock mode)
+    try {
       await prisma.eval.create({
         data: {
           user_id: evaluationUserId,
@@ -190,9 +208,16 @@ app.post(['/evaluate', '/api/evaluate'], async (req, res) => {
           underdog_bonus: result.underdog_bonus,
           goals: result.goals,
           switches: result.switches,
-          calendar_advice: result.calendar_advice
+          calendar_advice: result.calendar_advice,
+          // Save What If and Progress results if available
+          what_if_results: result.what_if_results ? JSON.stringify(result.what_if_results) : null,
+          progress_results: result.progress_results ? JSON.stringify(result.progress_results) : null
         }
       });
+      console.log(`✓ Evaluation saved successfully for user ${evaluationUserId}`);
+    } catch (saveError) {
+      console.error('Failed to save evaluation:', saveError);
+      // Continue execution - don't fail the API call if saving fails
     }
 
     res.json(enhancedResult);
@@ -283,6 +308,102 @@ app.post('/api/profile/update', async (req, res) => {
   } catch (err) {
     console.error('Profile update error:', err);
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/api/eval/latest', async (req, res) => {
+  try {
+    const { user_id, email } = req.query;
+    if (!user_id && !email) {
+      return res.status(400).json({ error: 'Missing user_id or email' });
+    }
+
+    // Find user first
+    let user;
+    if (email) {
+      user = await prisma.user.findUnique({ where: { email: String(email) } });
+    } else {
+      user = await prisma.user.findUnique({ where: { id: parseInt(user_id) } });
+    }
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    console.log(`🔍 Fetching latest evaluation for user ${user.id} (${user.email})`);
+
+    // Get latest evaluation
+    const latestEval = await prisma.eval.findFirst({
+      where: { user_id: parseInt(user.id) },
+      orderBy: { eval_date: 'desc' },
+      select: {
+        id: true,
+        eval_date: true,
+        player_name: true,
+        position: true,
+        score: true,
+        division: true,
+        notes: true,
+        probability: true,
+        performance_score: true,
+        combine_score: true,
+        upside_score: true,
+        underdog_bonus: true,
+        goals: true,
+        switches: true,
+        calendar_advice: true,
+        what_if_results: true,
+        progress_results: true
+      }
+    });
+
+    if (!latestEval) {
+      console.log(`⚠️ No evaluations found for user ${user.id}`);
+      return res.status(404).json({ error: 'No evaluations found for user' });
+    }
+
+    console.log(`✅ Found evaluation ${latestEval.id} for ${latestEval.player_name} (${latestEval.position})`);
+
+    // Transform to match Dashboard component expectations
+    const dashboardData = {
+      score: latestEval.score,
+      predicted_tier: latestEval.division,
+      predicted_division: latestEval.division,
+      notes: latestEval.notes,
+      probability: latestEval.probability,
+      confidence_score: latestEval.probability,
+      performance_score: latestEval.performance_score,
+      combine_score: latestEval.combine_score,
+      upside_score: latestEval.upside_score,
+      underdog_bonus: latestEval.underdog_bonus,
+      goals: latestEval.goals,
+      switches: latestEval.switches,
+      calendar_advice: latestEval.calendar_advice,
+      position: latestEval.position,
+      playerName: latestEval.player_name,
+      // Parse JSON fields if they exist
+      what_if_results: latestEval.what_if_results ? JSON.parse(latestEval.what_if_results) : null,
+      progress_results: latestEval.progress_results ? JSON.parse(latestEval.progress_results) : null,
+      // Default imputation flags (these would be populated by actual pipeline)
+      imputation_flags: {
+        forty_yard_dash_imputed: false,
+        vertical_jump_imputed: false,
+        shuttle_imputed: false,
+        broad_jump_imputed: false,
+        bench_press_imputed: false
+      },
+      data_completeness_warning: false,
+      // Add evaluation metadata
+      eval_date: latestEval.eval_date,
+      eval_id: latestEval.id
+    };
+
+    console.log(`📊 Returning dashboard data with ${latestEval.what_if_results ? 'what-if' : 'no what-if'} and ${latestEval.progress_results ? 'progress' : 'no progress'} results`);
+
+    res.json(dashboardData);
+  } catch (err) {
+    console.error('❌ Latest eval error:', err);
+    res.status(500).json({ error: 'Server error', details: err.message });
   }
 });
 

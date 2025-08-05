@@ -47,4 +47,6 @@
        goals                String[] // Array of goals
        switches             String?
        calendar_advice      String?
+       what_if_results      String?  // JSON string of What If simulation results
+       progress_results     String?  // JSON string of Division Progress results
      }

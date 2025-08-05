@@ -10,7 +10,6 @@ import { ProgressPills } from '../../components/ProgressPills';
 import InputBar from '../../components/InputBar';
 import ChatThread from '../../components/ChatThread';
 import { ReviewCard } from '../../components/ReviewCard';
-import Dashboard from '../../components/Dashboard';
 import { useDarkMode } from '../../components/DarkModeContext';
 import ProfileSetupModal from '../../components/ProfileSetupModal';
 import { useUserProfile, useProfileCompletion } from '../../contexts/UserProfileContext';
@@ -58,21 +57,7 @@ export type FormValues = {
   [key: string]: string | number | undefined;
 };
 
-// Mock evaluation result for testing
-const mockEvalResult = {
-  predicted_tier: 'FCS',
-  score: 69.3,
-  notes: 'Balanced profile with room for improvement',
-  probability: 0.693,
-  performance_score: 0.70,
-  combine_score: 0.65,
-  upside_score: 0.10,
-  underdog_bonus: 0.05,
-  goals: ['Improve 40-yard dash to 4.5s', 'Increase senior TD passes'],
-  switches: 'Consider switching to WR for better Power5 fit',
-  calendar_advice: 'Schedule campus visits during April 15-May 24, 2025 contact period',
-  position: 'QB' as 'QB' | 'RB' | 'WR'
-};
+
 
 export default function WizardPage() {
   const form = useForm<FormValues>();
@@ -80,7 +65,6 @@ export default function WizardPage() {
   const [step, setStep] = useState(0);
   const [selectedPosition, setSelectedPosition] = useState<'QB' | 'RB' | 'WR' | null>(null);
   const [messages, setMessages] = useState<{ from: 'app' | 'user'; text: string }[]>([]);
-  const [evalResult, setEvalResult] = useState<typeof mockEvalResult | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const { darkMode, toggleDarkMode } = useDarkMode();
@@ -371,7 +355,7 @@ export default function WizardPage() {
       // Get all form data including position
       const formData = form.getValues();
 
-      // Call the evaluation API with position data
+      // Call the evaluation API with position data and user info
       const response = await fetch('/api/evaluate', {
         method: 'POST',
         headers: {
@@ -380,6 +364,7 @@ export default function WizardPage() {
         body: JSON.stringify({
           ...formData,
           position: selectedPosition, // Ensure position is included
+          user_email: session?.user?.email, // Include user email for proper saving
         }),
       });
 
@@ -389,29 +374,23 @@ export default function WizardPage() {
 
       const result = await response.json();
 
-      // Store evaluation result and redirect to dashboard
-      sessionStorage.setItem('evalResult', JSON.stringify({
-        ...result,
-        position: selectedPosition,
-        playerName: formData.Player_Name,
-      }));
+      // Evaluation completed successfully - redirect to home page (dashboard)
+      console.log('✅ Evaluation completed successfully, redirecting to home page');
 
-      // Redirect to dashboard page with results
-      router.push('/dashboard');
+      // Clear any session storage since we now load from database
+      sessionStorage.removeItem('evalResult');
+
+      // Redirect to home page where dashboard will load saved data
+      router.push('/');
 
     } catch (error) {
       console.error('Evaluation submission failed:', error);
       message.error('Failed to evaluate profile. Please try again.');
-      // Fallback to mock data for development
-      setEvalResult({ ...mockEvalResult, position: selectedPosition || 'QB' });
+      // Don't show fallback dashboard - just allow user to retry
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  if (evalResult) {
-    return <Dashboard evalData={evalResult} />;
-  }
 
   return (
     <div

@@ -58,18 +58,6 @@ const states = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI'
 const InputBar: React.FC<InputBarProps> = ({ step, steps, onEnter }) => {
   const { control, watch } = useFormContext<FormValues>();
   
-  // Watch for step changes to clear input values after submission
-  const [inputValue, setInputValue] = React.useState('');
-  const [lastStep, setLastStep] = React.useState(step);
-  
-  // Clear input when step changes (indicates successful submission)
-  React.useEffect(() => {
-    if (step !== lastStep) {
-      setInputValue('');
-      setLastStep(step);
-    }
-  }, [step, lastStep]);
-  
   // Get the current step configuration
   const currentStep = steps[step];
   if (!currentStep) return null;
@@ -176,10 +164,14 @@ const InputBar: React.FC<InputBarProps> = ({ step, steps, onEnter }) => {
       return null; // Review step is handled by ReviewCard component
 
     default:
-      // For all other fields (stats, combine, etc.), render a number input
+      // For all other fields (stats, combine, etc.), render appropriate input
       if (key === 'review') {
         return null;
       }
+
+      // Get proper field label
+      const fieldLabel = String(key).replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
+      const placeholder = `Enter ${String(key).replace(/_/g, ' ').toLowerCase()}`;
 
       return (
         <Controller
@@ -187,24 +179,27 @@ const InputBar: React.FC<InputBarProps> = ({ step, steps, onEnter }) => {
           control={control}
           render={({ field, fieldState }) => (
             <Form.Item
-              label={String(key).replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+              label={fieldLabel}
               validateStatus={fieldState.error ? 'error' : undefined}
               help={fieldState.error?.message}
               className="w-full"
             >
               <Input
-                value={field.value === undefined ? inputValue : field.value}
+                {...field}
+                value={field.value || ''}
                 onChange={(e) => {
                   const value = e.target.value;
-                  setInputValue(value);
-                  field.onChange(value ? Number(value) : undefined);
+                  // Convert to number for numeric fields, keep as string for text fields
+                  if (key === 'Player_Name') {
+                    field.onChange(value);
+                  } else {
+                    field.onChange(value ? Number(value) : undefined);
+                  }
                 }}
-                type="number"
-                placeholder={`Enter ${String(key).replace(/_/g, ' ').toLowerCase()}`}
-                onPressEnter={() => {
-                  onEnter();
-                  setInputValue('');
-                }}
+                type={key === 'Player_Name' ? 'text' : 'number'}
+                placeholder={placeholder}
+                autoFocus
+                onPressEnter={onEnter}
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all"
               />
             </Form.Item>

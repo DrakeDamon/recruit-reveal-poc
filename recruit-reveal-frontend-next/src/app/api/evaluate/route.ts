@@ -7,7 +7,7 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     // Use fallback backend URL if environment variable not set
-    const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL ||
+    const BACKEND = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL ||
       'http://localhost:3001';
 
     // Ensure position is included in the payload for backend processing
