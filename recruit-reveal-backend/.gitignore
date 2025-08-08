@@ -36,3 +36,95 @@ yarn-error.log*
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# ML Pipeline files and data (SECURITY: Never commit trained models or data to version control)
+# Production pipeline module (contains proprietary ML logic)
+recruit_reveal_production_pipeline.py
+
+# Development notebooks (may contain sensitive data/experiments)
+*.ipynb
+gitingore-eval-logic-test.ipynb
+.ipynb_checkpoints/
+
+# Trained model files (large files and proprietary IP)
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.pth
+*.onnx
+*.tflite
+*.pb
+
+# Model directories and versioned exports
+models/
+model_exports/
+ml-api/models/
+pipelines/
+checkpoints/
+
+# Training data and datasets (sensitive player information)
+data/
+datasets/
+*.csv
+*.parquet
+*.xlsx
+*.json
+evals_backup.csv
+training_data/
+test_data/
+raw_data/
+
+# ML experiment tracking and logs
+experiments/
+runs/
+mlruns/
+wandb/
+tensorboard_logs/
+*.log
+
+# Model metadata and configurations (may contain hyperparameters)
+*.metadata.json
+model_config.json
+pipeline_config.yaml
+
+# Feature engineering artifacts
+feature_store/
+preprocessed_data/
+feature_cache/
+
+# ML model serving artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Jupyter/IPython
+.ipynb_checkpoints
+profile_default/
+ipython_config.py
+
+# MLflow
+mlruns/
+mlartifacts/
+
+# DVC (Data Version Control)
+.dvc/
+*.dvc
+
+# Model performance reports
+performance_reports/
+model_analysis/
+*.html
+*.pdf
+
+# Temporary ML files
+temp_models/
+tmp/
+.tmp/
+
+# Environment-specific model configurations
+local_config.json
+dev_config.json
+staging_config.json

@@ -1,0 +1,55 @@
+# ML-API Specific Ignores (SECURITY: Trained models and data must never be committed)
+
+# Trained model files and pipelines (large files + proprietary IP)
+models/
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.pth
+*.onnx
+*.tflite
+*.pb
+
+# Model metadata and versioning
+*.metadata.json
+CHANGELOG_*.md
+
+# Environment and configuration
+.env
+.env.*
+local_config.json
+dev_config.json
+staging_config.json
+
+# Python runtime files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# API logs and monitoring
+*.log
+logs/
+monitoring/
+
+# Testing artifacts
+test_outputs/
+api_test_results/
+
+# Docker artifacts (if using local builds)
+.dockerignore.local
+docker-compose.override.yml
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+tmp/
+.tmp/
+temp/

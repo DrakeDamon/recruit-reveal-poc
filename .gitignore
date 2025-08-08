@@ -1,1 +1,47 @@
+# ML Pipeline files and data (SECURITY: Never commit trained models or sensitive data)
 gitingore-eval-logic-test
+recruit_reveal_production_pipeline.py
+
+# Trained models and ML artifacts (large files and proprietary IP)
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.pth
+models/
+model_exports/
+pipelines/
+checkpoints/
+
+# Training data and datasets (contains sensitive player information)
+data/
+datasets/
+*.csv
+*.parquet
+*.xlsx
+training_data/
+test_data/
+raw_data/
+evals_backup.csv
+
+# Development notebooks (may contain sensitive experiments)
+*.ipynb
+.ipynb_checkpoints/
+
+# Model metadata and configurations
+*.metadata.json
+model_config.json
+pipeline_config.yaml
+
+# ML experiment tracking
+experiments/
+runs/
+mlruns/
+wandb/
+tensorboard_logs/
+
+# Environment files
+.env
+.env.*
+*.env
+!.env.example

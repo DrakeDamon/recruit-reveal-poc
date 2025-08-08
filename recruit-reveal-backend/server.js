@@ -1,9 +1,6 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const cors = require('cors');
-const { SynapseManagementClient } = require('@azure/arm-synapse');
-const { DefaultAzureCredential } = require('@azure/identity');
-const { triggerPipeline } = require('./lib/synapse');
 const bcrypt = require('bcrypt');
 const { Pool } = require('pg');
 const app = express();
