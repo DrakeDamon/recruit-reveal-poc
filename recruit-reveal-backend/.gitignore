@@ -128,3 +128,47 @@ tmp/
 local_config.json
 dev_config.json
 staging_config.json
+
+# CRITICAL SECURITY: Real training data (contains PII)
+data/qb.csv
+data/rb.csv
+data/wr.csv
+data/*FINAL*.csv
+data/*final*.csv
+**/221*QB*FINAL*.csv
+**/RB*list*.csv
+**/wr*final*.csv
+
+# CRITICAL SECURITY: Test files and development scripts
+test_*.py
+list_*.py
+*_test.py
+*_real.csv
+benchmark_*.py
+
+# CRITICAL SECURITY: Azure and cloud credentials
+azure_credentials.json
+azure_config.json
+*credentials*
+*secrets*
+*password*
+*.key
+*.pem
+*.p12
+*.pfx
+*.sas
+
+# CRITICAL SECURITY: Database dumps and backups
+*.sql
+*.dump
+*.backup
+*.db
+
+# CRITICAL SECURITY: AutoGluon model artifacts (large + proprietary)
+autogluon_*/
+AutogluonModels/
+
+# CRITICAL SECURITY: Additional notebook patterns
+*eval-logic*.ipynb
+gitignore-eval-logic-test.ipynb
+synapse-*.ipynb
