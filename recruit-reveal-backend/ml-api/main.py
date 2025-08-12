@@ -4,6 +4,7 @@ FastAPI service for serving trained ML pipeline predictions
 """
 
 import os
+import sys
 import logging
 import traceback
 from pathlib import Path
@@ -11,6 +12,28 @@ from typing import Dict, Any, Optional, List
 import json
 import re
 from datetime import datetime
+from dotenv import load_dotenv
+
+# Add parent directory to Python path to allow model loading
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+# Fix sklearn compatibility issue for older models
+try:
+    from sklearn.utils import parse_version
+except ImportError:
+    # For newer sklearn versions, patch the parse_version function
+    import sklearn.utils
+    try:
+        from packaging.version import parse as parse_version
+        sklearn.utils.parse_version = parse_version
+    except ImportError:
+        # Create a simple fallback
+        def parse_version(version_string):
+            return version_string
+        sklearn.utils.parse_version = parse_version
+
+# Load environment variables from .env file
+load_dotenv()
 
 import pandas as pd
 import numpy as np
