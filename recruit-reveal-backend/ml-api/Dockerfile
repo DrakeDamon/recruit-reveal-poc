@@ -36,5 +36,5 @@ EXPOSE $PORT
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:${PORT}/health')" || exit 1
 
-# Run the application
-CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run the application (let uvicorn read PORT env var)
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0"]

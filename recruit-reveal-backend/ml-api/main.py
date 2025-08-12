@@ -249,6 +249,21 @@ def load_models():
     logger.info(f"   MODEL_DIR: {model_dir.absolute()}")
     logger.info(f"   Directory exists: {model_dir.exists()}")
     
+    # Log directory contents for debugging
+    if model_dir.exists():
+        try:
+            files = list(model_dir.iterdir())
+            logger.info(f"📁 Model directory contents ({len(files)} files):")
+            for file in sorted(files):
+                if file.is_file():
+                    logger.info(f"   📄 {file.name} ({file.stat().st_size} bytes)")
+                elif file.is_dir():
+                    logger.info(f"   📁 {file.name}/ (directory)")
+        except Exception as e:
+            logger.warning(f"⚠️ Could not list model directory contents: {e}")
+    else:
+        logger.warning(f"⚠️ Model directory does not exist: {model_dir}")
+    
     positions = ['qb', 'rb', 'wr']
     
     for position in positions:
