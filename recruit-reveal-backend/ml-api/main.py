@@ -236,6 +236,11 @@ def download_models_from_azure():
         # Import azure blob client from local directory
         from azure_blob_client import AzureBlobClient
         
+        # The current SAS_URL is for the 'data' container, but models need to be
+        # downloaded from a 'recruit-reveal-models' container or uploaded there first
+        
+        # For now, let's check if models can be downloaded from the data container
+        # In the future, models should be in a separate models container
         blob_client = AzureBlobClient(sas_url)
         if not blob_client.use_blob:
             logger.warning("⚠️ Azure Blob client not available - using local models")
@@ -261,26 +266,46 @@ def download_models_from_azure():
         ]
         
         logger.info(f"📥 Attempting to download {len(model_files)} model files from Azure...")
+        logger.info(f"🔗 Using SAS URL container: {blob_client.container_name if hasattr(blob_client, 'container_name') else 'data'}")
         
         downloaded = 0
         for filename in model_files:
             try:
                 local_path = model_dir / filename
-                # Use the existing blob client's download capabilities
-                # Note: This is a simplified approach - may need adjustment based on your blob structure
+                
+                # Try to download from the current container (likely 'data')
                 if blob_client.container_client:
                     blob_client_obj = blob_client.container_client.get_blob_client(filename)
                     with open(local_path, "wb") as f:
                         f.write(blob_client_obj.download_blob().readall())
                     logger.info(f"✅ Downloaded {filename}")
                     downloaded += 1
-                else:
-                    logger.warning(f"⚠️ Container-specific download for {filename} needs implementation")
-                    
+                elif blob_client.blob_service:
+                    # Try models container first, then data container
+                    for container_name in ["recruit-reveal-models", "data"]:
+                        try:
+                            blob_client_obj = blob_client.blob_service.get_blob_client(
+                                container=container_name,
+                                blob=filename
+                            )
+                            with open(local_path, "wb") as f:
+                                f.write(blob_client_obj.download_blob().readall())
+                            logger.info(f"✅ Downloaded {filename} from {container_name}")
+                            downloaded += 1
+                            break
+                        except Exception:
+                            continue
+                    else:
+                        logger.warning(f"⚠️ {filename} not found in any container")
+                        
             except Exception as e:
                 logger.warning(f"⚠️ Failed to download {filename}: {e}")
         
         logger.info(f"📦 Downloaded {downloaded}/{len(model_files)} model files")
+        
+        if downloaded == 0:
+            logger.warning("⚠️ No models downloaded from Azure - models may need to be uploaded first")
+            logger.info("💡 To upload models: Use the azure_blob_client.upload_model() function")
         
     except ImportError as e:
         logger.warning(f"⚠️ Could not import Azure blob client: {e}")
