@@ -225,9 +225,76 @@ def load_specific_model(models_dir: Path, position: str, version: str = None):
         logger.error(f"❌ Failed to load {position.upper()} model: {str(e)}")
         raise RuntimeError(f"Failed to load pipeline from {filepath}: {str(e)}")
 
+def download_models_from_azure():
+    """Download models from Azure Blob Storage if available"""
+    sas_url = os.getenv("SAS_URL")
+    if not sas_url:
+        logger.info("📁 No SAS_URL provided - using local models only")
+        return
+    
+    try:
+        # Import azure blob client from parent directory
+        sys.path.insert(0, str(Path(__file__).parent.parent))
+        from recruit_reveal.azure_blob_client import AzureBlobClient
+        
+        blob_client = AzureBlobClient(sas_url)
+        if not blob_client.use_blob:
+            logger.warning("⚠️ Azure Blob client not available - using local models")
+            return
+            
+        model_dir = Path("/app/models")
+        model_dir.mkdir(exist_ok=True)
+        
+        # Expected model files for v1.2.1
+        model_files = [
+            "recruit_reveal_qb_pipeline_v1.2.1.pkl",
+            "recruit_reveal_qb_pipeline_v1.2.1.metadata.json",
+            "recruit_reveal_rb_pipeline_v1.2.1.pkl", 
+            "recruit_reveal_rb_pipeline_v1.2.1.metadata.json",
+            "recruit_reveal_wr_pipeline_v1.2.1.pkl",
+            "recruit_reveal_wr_pipeline_v1.2.1.metadata.json",
+            "recruit_reveal_qb_pipeline_latest.pkl",
+            "recruit_reveal_qb_pipeline_latest.metadata.json",
+            "recruit_reveal_rb_pipeline_latest.pkl",
+            "recruit_reveal_rb_pipeline_latest.metadata.json", 
+            "recruit_reveal_wr_pipeline_latest.pkl",
+            "recruit_reveal_wr_pipeline_latest.metadata.json"
+        ]
+        
+        logger.info(f"📥 Attempting to download {len(model_files)} model files from Azure...")
+        
+        downloaded = 0
+        for filename in model_files:
+            try:
+                local_path = model_dir / filename
+                # Use the existing blob client's download capabilities
+                # Note: This is a simplified approach - may need adjustment based on your blob structure
+                if blob_client.container_client:
+                    blob_client_obj = blob_client.container_client.get_blob_client(filename)
+                    with open(local_path, "wb") as f:
+                        f.write(blob_client_obj.download_blob().readall())
+                    logger.info(f"✅ Downloaded {filename}")
+                    downloaded += 1
+                else:
+                    logger.warning(f"⚠️ Container-specific download for {filename} needs implementation")
+                    
+            except Exception as e:
+                logger.warning(f"⚠️ Failed to download {filename}: {e}")
+        
+        logger.info(f"📦 Downloaded {downloaded}/{len(model_files)} model files")
+        
+    except ImportError as e:
+        logger.warning(f"⚠️ Could not import Azure blob client: {e}")
+    except Exception as e:
+        logger.error(f"❌ Error downloading models from Azure: {e}")
+
 def load_models():
     """Load all position-specific models at startup with version support"""
     global models, model_metadata, available_versions
+    
+    # First, try to download models from Azure if in container environment
+    if os.getenv("SAS_URL") and Path("/app").exists():
+        download_models_from_azure()
     
     # Support environment variables for model configuration
     model_version = os.getenv("MODEL_VERSION", "latest")
