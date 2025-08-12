@@ -233,9 +233,8 @@ def download_models_from_azure():
         return
     
     try:
-        # Import azure blob client from parent directory
-        sys.path.insert(0, str(Path(__file__).parent.parent))
-        from recruit_reveal.azure_blob_client import AzureBlobClient
+        # Import azure blob client from local directory
+        from azure_blob_client import AzureBlobClient
         
         blob_client = AzureBlobClient(sas_url)
         if not blob_client.use_blob:
