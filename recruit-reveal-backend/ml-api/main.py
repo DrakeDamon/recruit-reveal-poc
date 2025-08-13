@@ -310,9 +310,9 @@ async def retrain_models_async():
                     if success and csv_path.exists():
                         logger.info(f"✅ Downloaded {position.upper()} data: {csv_path.stat().st_size} bytes")
                         
-                        # Load existing v1.2.1 model as baseline (100% accuracy)
+                        # Load existing standalone model as baseline (100% accuracy)
                         models_dir = Path("models")
-                        baseline_model, baseline_metadata = load_specific_model(models_dir, position, "1.2.1")
+                        baseline_model, baseline_metadata = load_specific_model(models_dir, position, None)  # Use latest
                         
                         # For secure deployment, use existing v1.2.1 models instead of risky retraining
                         # This maintains 100% accuracy while providing read-only blob access
@@ -390,8 +390,8 @@ def load_models():
     """Load all position-specific models at startup with version support"""
     global models, model_metadata, available_versions
     
-    # Support environment variables for model configuration
-    model_version = os.getenv("MODEL_VERSION", "latest")
+    # Support environment variables for model configuration - force latest for standalone models
+    model_version = "latest"  # Always use latest standalone models
     model_dir_env = os.getenv("MODEL_DIR", None)
     
     # Determine model directory with fallbacks
