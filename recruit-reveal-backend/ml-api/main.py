@@ -280,7 +280,7 @@ async def retrain_models_async():
         
         try:
             # Import retraining components
-            from recruit_reveal.azure_blob_client import get_blob_client
+            from azure_blob_client import get_blob_client
             
             blob_client = get_blob_client()
             if not blob_client.use_blob:

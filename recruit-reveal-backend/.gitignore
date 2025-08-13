@@ -60,6 +60,8 @@ gitingore-eval-logic-test.ipynb
 models/
 model_exports/
 ml-api/models/
+!ml-api/models/recruit_reveal_*_pipeline_latest.pkl
+!ml-api/models/recruit_reveal_*_pipeline_latest.metadata.json
 pipelines/
 checkpoints/
 
