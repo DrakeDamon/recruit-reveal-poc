@@ -1,0 +1,305 @@
+{
+  "position": "qb",
+  "training_samples": 187,
+  "features_count": 76,
+  "feature_names": [
+    "grad_year",
+    "height_inches",
+    "weight_lbs",
+    "senior_yds",
+    "senior_td_passes",
+    "senior_ypg",
+    "senior_cmp",
+    "senior_att",
+    "senior_int",
+    "junior_yds",
+    "junior_td_passes",
+    "junior_ypg",
+    "junior_cmp",
+    "junior_att",
+    "junior_int",
+    "forty_yard_dash",
+    "games",
+    "forty_yard_dash_imputed",
+    "vertical_jump",
+    "shuttle",
+    "broad_jump",
+    "state_talent_score",
+    "state_tier_1",
+    "state_tier_2",
+    "state_tier_3",
+    "state_tier_4",
+    "rec_ypg",
+    "ypg",
+    "trajectory",
+    "bmi",
+    "ath_power",
+    "bmi_ypg",
+    "height_traj",
+    "speed_power_ratio",
+    "comp_ypg",
+    "height_comp",
+    "trajectory_z",
+    "rule_score",
+    "grad_year_pctile",
+    "height_inches_pctile",
+    "weight_lbs_pctile",
+    "senior_yds_pctile",
+    "senior_td_passes_pctile",
+    "senior_ypg_pctile",
+    "senior_cmp_pctile",
+    "senior_att_pctile",
+    "senior_int_pctile",
+    "junior_yds_pctile",
+    "junior_td_passes_pctile",
+    "junior_ypg_pctile",
+    "junior_cmp_pctile",
+    "junior_att_pctile",
+    "junior_int_pctile",
+    "forty_yard_dash_pctile",
+    "games_pctile",
+    "forty_yard_dash_imputed_pctile",
+    "vertical_jump_pctile",
+    "shuttle_pctile",
+    "broad_jump_pctile",
+    "state_talent_score_pctile",
+    "state_tier_1_pctile",
+    "state_tier_2_pctile",
+    "state_tier_3_pctile",
+    "state_tier_4_pctile",
+    "rec_ypg_pctile",
+    "ypg_pctile",
+    "trajectory_pctile",
+    "bmi_pctile",
+    "ath_power_pctile",
+    "bmi_ypg_pctile",
+    "height_traj_pctile",
+    "speed_power_ratio_pctile",
+    "comp_ypg_pctile",
+    "height_comp_pctile",
+    "trajectory_z_pctile",
+    "rule_score_pctile"
+  ],
+  "winsorization_bounds": {
+    "grad_year": [
+      2015.0,
+      2025.0
+    ],
+    "height_inches": [
+      67.6,
+      77.19999999999999
+    ],
+    "weight_lbs": [
+      143.6,
+      242.8
+    ],
+    "senior_yds": [
+      11.0,
+      4676.38
+    ],
+    "senior_td_passes": [
+      1.0,
+      62.94999999999999
+    ],
+    "senior_ypg": [
+      10.3,
+      353.06399999999996
+    ],
+    "senior_cmp": [
+      1.86,
+      305.0
+    ],
+    "senior_att": [
+      2.0,
+      490.69999999999993
+    ],
+    "senior_int": [
+      1.0,
+      16.0
+    ],
+    "junior_yds": [
+      8.48,
+      4545.920000000002
+    ],
+    "junior_td_passes": [
+      1.0,
+      56.56999999999999
+    ],
+    "junior_ypg": [
+      9.143999999999998,
+      316.42199999999997
+    ],
+    "junior_cmp": [
+      1.0,
+      306.6000000000003
+    ],
+    "junior_att": [
+      1.48,
+      460.04
+    ],
+    "junior_int": [
+      1.0,
+      15.669999999999987
+    ],
+    "forty_yard_dash": [
+      4.602731803406445,
+      5.187321804696861
+    ],
+    "games": [
+      8.0,
+      15.0
+    ],
+    "forty_yard_dash_imputed": [
+      1.0,
+      1.0
+    ],
+    "vertical_jump": [
+      24.88747673996057,
+      33.56668333817108
+    ],
+    "shuttle": [
+      4.302731803406445,
+      4.8154913535226465
+    ],
+    "broad_jump": [
+      92.00272623260618,
+      116.9167083454277
+    ],
+    "state_talent_score": [
+      1.0,
+      4.0
+    ],
+    "state_tier_1": [
+      0.0,
+      1.0
+    ],
+    "state_tier_2": [
+      0.0,
+      1.0
+    ],
+    "state_tier_3": [
+      0.0,
+      1.0
+    ],
+    "state_tier_4": [
+      0.0,
+      1.0
+    ],
+    "rec_ypg": [
+      0.0,
+      0.0
+    ],
+    "ypg": [
+      1.375,
+      344.438
+    ],
+    "trajectory": [
+      0.0,
+      209.392
+    ],
+    "bmi": [
+      20.675069760414104,
+      29.290942172687682
+    ],
+    "ath_power": [
+      2295.243175717197,
+      3924.5061898626604
+    ],
+    "bmi_ypg": [
+      389.57254470580597,
+      9981.199530987233
+    ],
+    "height_traj": [
+      0.0,
+      15552.720000000014
+    ],
+    "speed_power_ratio": [
+      460.05738853982825,
+      806.2669378934175
+    ],
+    "comp_ypg": [
+      6.18,
+      211.83839999999998
+    ],
+    "height_comp": [
+      4056.0,
+      4631.999999999999
+    ],
+    "trajectory_z": [
+      -0.6450616145386846,
+      2.978303877393611
+    ],
+    "rule_score": [
+      20.112844197138315,
+      85.34672041915283
+    ]
+  },
+  "target_classes": [
+    "0",
+    "1",
+    "2",
+    "3"
+  ],
+  "model_params": {
+    "objective": "multi:softprob",
+    "base_score": null,
+    "booster": null,
+    "callbacks": null,
+    "colsample_bylevel": null,
+    "colsample_bynode": null,
+    "colsample_bytree": null,
+    "device": null,
+    "early_stopping_rounds": null,
+    "enable_categorical": false,
+    "eval_metric": "mlogloss",
+    "feature_types": null,
+    "gamma": null,
+    "grow_policy": null,
+    "importance_type": null,
+    "interaction_constraints": null,
+    "learning_rate": 0.05,
+    "max_bin": null,
+    "max_cat_threshold": null,
+    "max_cat_to_onehot": null,
+    "max_delta_step": null,
+    "max_depth": 6,
+    "max_leaves": null,
+    "min_child_weight": null,
+    "missing": NaN,
+    "monotone_constraints": null,
+    "multi_strategy": null,
+    "n_estimators": 300,
+    "n_jobs": -1,
+    "num_parallel_tree": null,
+    "random_state": 42,
+    "reg_alpha": null,
+    "reg_lambda": null,
+    "sampling_method": null,
+    "scale_pos_weight": null,
+    "subsample": null,
+    "tree_method": null,
+    "validate_parameters": null,
+    "verbosity": null
+  },
+  "model_version": "1.2.1",
+  "train_date": "2025-08-12T00:31:06.236177+00:00",
+  "notes": "Production QB model v1.2.1 with sklearn 1.7.1 compatibility",
+  "changelog_entry": [
+    "Retrained with production RecruitRevealPipeline",
+    "XGBoost classifier with 300 estimators",
+    "Full feature engineering pipeline (76 features)",
+    "sklearn 1.7.1 compatibility ensured",
+    "Target accuracy: 100.0%"
+  ],
+  "pipeline_config": {
+    "preprocessor_type": "RecruitRevealPreprocessor",
+    "model_type": "XGBoost",
+    "defensive_programming": true,
+    "production_ready": true
+  },
+  "api_compatibility": {
+    "fastapi": true,
+    "render_deployment": true,
+    "versioned": true
+  }
+}

@@ -1,0 +1,383 @@
+{
+  "position": "rb",
+  "training_samples": 164,
+  "features_count": 102,
+  "feature_names": [
+    "grad_year",
+    "height_inches",
+    "weight_lbs",
+    "senior_yds",
+    "senior_avg",
+    "senior_touches",
+    "senior_ypg",
+    "senior_run",
+    "senior_tot",
+    "senior_rec",
+    "senior_rec_yds",
+    "senior_lng",
+    "senior_td",
+    "junior_yds",
+    "junior_avg",
+    "junior_touches",
+    "junior_ypg",
+    "junior_run",
+    "junior_tot",
+    "junior_rec",
+    "junior_rec_yds",
+    "junior_lng",
+    "junior_td",
+    "forty_yard_dash",
+    "vertical_jump",
+    "shuttle",
+    "broad_jump",
+    "games",
+    "forty_yard_dash_imputed",
+    "shuttle_imputed",
+    "broad_jump_imputed",
+    "state_talent_score",
+    "state_tier_1",
+    "state_tier_2",
+    "state_tier_3",
+    "state_tier_4",
+    "rec_ypg",
+    "ypg",
+    "td_game",
+    "all_purpose_game",
+    "trajectory",
+    "bmi",
+    "eff_ratio",
+    "ath_power",
+    "bmi_ypg",
+    "height_traj",
+    "speed_power_ratio",
+    "weight_ypc",
+    "combine_confidence",
+    "trajectory_z",
+    "rule_score",
+    "grad_year_pctile",
+    "height_inches_pctile",
+    "weight_lbs_pctile",
+    "senior_yds_pctile",
+    "senior_avg_pctile",
+    "senior_touches_pctile",
+    "senior_ypg_pctile",
+    "senior_run_pctile",
+    "senior_tot_pctile",
+    "senior_rec_pctile",
+    "senior_rec_yds_pctile",
+    "senior_lng_pctile",
+    "senior_td_pctile",
+    "junior_yds_pctile",
+    "junior_avg_pctile",
+    "junior_touches_pctile",
+    "junior_ypg_pctile",
+    "junior_run_pctile",
+    "junior_tot_pctile",
+    "junior_rec_pctile",
+    "junior_rec_yds_pctile",
+    "junior_lng_pctile",
+    "junior_td_pctile",
+    "forty_yard_dash_pctile",
+    "vertical_jump_pctile",
+    "shuttle_pctile",
+    "broad_jump_pctile",
+    "games_pctile",
+    "forty_yard_dash_imputed_pctile",
+    "shuttle_imputed_pctile",
+    "broad_jump_imputed_pctile",
+    "state_talent_score_pctile",
+    "state_tier_1_pctile",
+    "state_tier_2_pctile",
+    "state_tier_3_pctile",
+    "state_tier_4_pctile",
+    "rec_ypg_pctile",
+    "ypg_pctile",
+    "td_game_pctile",
+    "all_purpose_game_pctile",
+    "trajectory_pctile",
+    "bmi_pctile",
+    "eff_ratio_pctile",
+    "ath_power_pctile",
+    "bmi_ypg_pctile",
+    "height_traj_pctile",
+    "speed_power_ratio_pctile",
+    "weight_ypc_pctile",
+    "combine_confidence_pctile",
+    "trajectory_z_pctile",
+    "rule_score_pctile"
+  ],
+  "winsorization_bounds": {
+    "grad_year": [
+      2020.0,
+      2025.0
+    ],
+    "height_inches": [
+      65.0,
+      73.41
+    ],
+    "weight_lbs": [
+      145.0,
+      227.96000000000004
+    ],
+    "senior_yds": [
+      9.63,
+      2812.03
+    ],
+    "senior_avg": [
+      0.8,
+      47.700000000000045
+    ],
+    "senior_touches": [
+      2.0,
+      320.41999999999996
+    ],
+    "senior_ypg": [
+      4.6739999999999995,
+      273.19199999999984
+    ],
+    "senior_run": [
+      1.0,
+      50.69999999999993
+    ],
+    "senior_tot": [
+      1.0,
+      63.639999999999986
+    ],
+    "senior_rec": [
+      1.0,
+      38.0
+    ],
+    "senior_rec_yds": [
+      1.0,
+      712.9000000000007
+    ],
+    "senior_lng": [
+      0.0,
+      89.0
+    ],
+    "senior_td": [
+      0.0,
+      8.0
+    ],
+    "junior_yds": [
+      9.39,
+      3098.090000000002
+    ],
+    "junior_avg": [
+      1.4120000000000001,
+      30.943999999999996
+    ],
+    "junior_touches": [
+      5.0,
+      321.56000000000006
+    ],
+    "junior_ypg": [
+      4.18,
+      253.273
+    ],
+    "junior_run": [
+      1.0,
+      45.02000000000001
+    ],
+    "junior_tot": [
+      1.0,
+      48.0
+    ],
+    "junior_rec": [
+      1.0,
+      34.30000000000001
+    ],
+    "junior_rec_yds": [
+      4.97,
+      643.2
+    ],
+    "junior_lng": [
+      0.0,
+      86.18
+    ],
+    "junior_td": [
+      0.0,
+      7.030000000000001
+    ],
+    "forty_yard_dash": [
+      4.213602825869857,
+      4.934700000000001
+    ],
+    "vertical_jump": [
+      28.472029070128947,
+      38.685
+    ],
+    "shuttle": [
+      4.0136028258698575,
+      4.561515982846865
+    ],
+    "broad_jump": [
+      96.18007267532235,
+      128.85954387818697
+    ],
+    "games": [
+      8.0,
+      14.997801814375435
+    ],
+    "forty_yard_dash_imputed": [
+      0.0,
+      1.0
+    ],
+    "shuttle_imputed": [
+      0.0,
+      1.0
+    ],
+    "broad_jump_imputed": [
+      1.0,
+      1.0
+    ],
+    "state_talent_score": [
+      1.0,
+      4.0
+    ],
+    "state_tier_1": [
+      0.0,
+      1.0
+    ],
+    "state_tier_2": [
+      0.0,
+      1.0
+    ],
+    "state_tier_3": [
+      0.0,
+      1.0
+    ],
+    "state_tier_4": [
+      0.0,
+      1.0
+    ],
+    "rec_ypg": [
+      0.0,
+      0.0
+    ],
+    "ypg": [
+      0.9705000000000001,
+      259.5210000000001
+    ],
+    "td_game": [
+      0.0,
+      0.5994619943450069
+    ],
+    "all_purpose_game": [
+      2.6125000000000003,
+      260.88111857995057
+    ],
+    "trajectory": [
+      0.0,
+      221.65999999999985
+    ],
+    "bmi": [
+      22.95786435136962,
+      31.01461666981608
+    ],
+    "eff_ratio": [
+      0.0,
+      0.0
+    ],
+    "ath_power": [
+      2738.498775934886,
+      4850.367805135904
+    ],
+    "bmi_ypg": [
+      113.12044033933086,
+      7667.2500220379825
+    ],
+    "height_traj": [
+      0.0,
+      16037.279999999975
+    ],
+    "speed_power_ratio": [
+      603.794788471882,
+      1106.4493950894625
+    ],
+    "weight_ypc": [
+      0.0,
+      0.0
+    ],
+    "combine_confidence": [
+      0.0,
+      0.75
+    ],
+    "trajectory_z": [
+      -0.7653223627345886,
+      4.0458589818479815
+    ],
+    "rule_score": [
+      20.775878048780488,
+      94.23760486482591
+    ]
+  },
+  "target_classes": [
+    "0",
+    "1",
+    "2",
+    "3"
+  ],
+  "model_params": {
+    "objective": "multi:softprob",
+    "base_score": null,
+    "booster": null,
+    "callbacks": null,
+    "colsample_bylevel": null,
+    "colsample_bynode": null,
+    "colsample_bytree": null,
+    "device": null,
+    "early_stopping_rounds": null,
+    "enable_categorical": false,
+    "eval_metric": "mlogloss",
+    "feature_types": null,
+    "gamma": null,
+    "grow_policy": null,
+    "importance_type": null,
+    "interaction_constraints": null,
+    "learning_rate": 0.05,
+    "max_bin": null,
+    "max_cat_threshold": null,
+    "max_cat_to_onehot": null,
+    "max_delta_step": null,
+    "max_depth": 6,
+    "max_leaves": null,
+    "min_child_weight": null,
+    "missing": NaN,
+    "monotone_constraints": null,
+    "multi_strategy": null,
+    "n_estimators": 300,
+    "n_jobs": -1,
+    "num_parallel_tree": null,
+    "random_state": 42,
+    "reg_alpha": null,
+    "reg_lambda": null,
+    "sampling_method": null,
+    "scale_pos_weight": null,
+    "subsample": null,
+    "tree_method": null,
+    "validate_parameters": null,
+    "verbosity": null
+  },
+  "model_version": "1.2.1",
+  "train_date": "2025-08-12T00:31:08.141900+00:00",
+  "notes": "Production RB model v1.2.1 with sklearn 1.7.1 compatibility",
+  "changelog_entry": [
+    "Retrained with production RecruitRevealPipeline",
+    "XGBoost classifier with 300 estimators",
+    "Full feature engineering pipeline (102 features)",
+    "sklearn 1.7.1 compatibility ensured",
+    "Target accuracy: 100.0%"
+  ],
+  "pipeline_config": {
+    "preprocessor_type": "RecruitRevealPreprocessor",
+    "model_type": "XGBoost",
+    "defensive_programming": true,
+    "production_ready": true
+  },
+  "api_compatibility": {
+    "fastapi": true,
+    "render_deployment": true,
+    "versioned": true
+  }
+}

@@ -346,13 +346,11 @@ async def retrain_models_async():
                     return False
             
             # Run retraining in parallel with timeout
-            tasks = []
             loop = asyncio.get_event_loop()
-            for position in positions:
-                task = asyncio.create_task(
-                    loop.run_in_executor(executor, retrain_position, position)
-                )
-                tasks.append(task)
+            tasks = [
+                loop.run_in_executor(executor, retrain_position, position)
+                for position in positions
+            ]
             
             # Wait for completion with timeout
             try:
