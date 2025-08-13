@@ -347,9 +347,10 @@ async def retrain_models_async():
             
             # Run retraining in parallel with timeout
             tasks = []
+            loop = asyncio.get_event_loop()
             for position in positions:
                 task = asyncio.create_task(
-                    asyncio.get_event_loop().run_in_executor(executor, retrain_position, position)
+                    loop.run_in_executor(executor, retrain_position, position)
                 )
                 tasks.append(task)
             
