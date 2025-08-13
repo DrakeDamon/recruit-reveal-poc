@@ -1,0 +1,416 @@
+{
+  "position": "wr",
+  "training_samples": 158,
+  "features_count": 114,
+  "feature_names": [
+    "grad_year",
+    "height_inches",
+    "weight_lbs",
+    "senior_yds",
+    "senior_avg",
+    "senior_#",
+    "senior_y/g",
+    "senior_rec",
+    "senior_tot",
+    "senior_car",
+    "senior_lng",
+    "senior_100+",
+    "senior_td",
+    "junior_yds",
+    "junior_avg",
+    "junior_#",
+    "junior_y/g",
+    "junior_rec",
+    "junior_tot",
+    "junior_car",
+    "junior_lng",
+    "junior_100+",
+    "junior_td",
+    "forty_yard_dash",
+    "vertical_jump",
+    "shuttle",
+    "broad_jump",
+    "bmi",
+    "senior_tds",
+    "senior_ypg",
+    "junior_ypg",
+    "trajectory",
+    "state_talent_score",
+    "games",
+    "forty_yard_dash_imputed",
+    "vertical_jump_imputed",
+    "shuttle_imputed",
+    "broad_jump_imputed",
+    "rec_ypg",
+    "ypg",
+    "tds_game",
+    "td_game",
+    "all_purpose_game",
+    "eff_ratio",
+    "ath_power",
+    "bmi_ypg",
+    "height_traj",
+    "state_eff",
+    "speed_power_ratio",
+    "catch_radius",
+    "speed_yac",
+    "combine_confidence",
+    "trajectory_z",
+    "pos_wr",
+    "pos_qb",
+    "pos_rb",
+    "rule_score",
+    "grad_year_pctile",
+    "height_inches_pctile",
+    "weight_lbs_pctile",
+    "senior_yds_pctile",
+    "senior_avg_pctile",
+    "senior_#_pctile",
+    "senior_y/g_pctile",
+    "senior_rec_pctile",
+    "senior_tot_pctile",
+    "senior_car_pctile",
+    "senior_lng_pctile",
+    "senior_100+_pctile",
+    "senior_td_pctile",
+    "junior_yds_pctile",
+    "junior_avg_pctile",
+    "junior_#_pctile",
+    "junior_y/g_pctile",
+    "junior_rec_pctile",
+    "junior_tot_pctile",
+    "junior_car_pctile",
+    "junior_lng_pctile",
+    "junior_100+_pctile",
+    "junior_td_pctile",
+    "forty_yard_dash_pctile",
+    "vertical_jump_pctile",
+    "shuttle_pctile",
+    "broad_jump_pctile",
+    "bmi_pctile",
+    "senior_tds_pctile",
+    "senior_ypg_pctile",
+    "junior_ypg_pctile",
+    "trajectory_pctile",
+    "state_talent_score_pctile",
+    "games_pctile",
+    "forty_yard_dash_imputed_pctile",
+    "vertical_jump_imputed_pctile",
+    "shuttle_imputed_pctile",
+    "broad_jump_imputed_pctile",
+    "rec_ypg_pctile",
+    "ypg_pctile",
+    "tds_game_pctile",
+    "td_game_pctile",
+    "all_purpose_game_pctile",
+    "eff_ratio_pctile",
+    "ath_power_pctile",
+    "bmi_ypg_pctile",
+    "height_traj_pctile",
+    "state_eff_pctile",
+    "speed_power_ratio_pctile",
+    "catch_radius_pctile",
+    "speed_yac_pctile",
+    "combine_confidence_pctile",
+    "trajectory_z_pctile",
+    "pos_wr_pctile",
+    "pos_qb_pctile",
+    "pos_rb_pctile",
+    "rule_score_pctile"
+  ],
+  "winsorization_bounds": {
+    "grad_year": [
+      2021.0,
+      2025.0
+    ],
+    "height_inches": [
+      67.54,
+      77.0
+    ],
+    "weight_lbs": [
+      141.59,
+      212.35
+    ],
+    "senior_yds": [
+      61.71,
+      1457.2700000000007
+    ],
+    "senior_avg": [
+      2.96,
+      31.684999999999985
+    ],
+    "senior_#": [
+      4.45,
+      106.0
+    ],
+    "senior_y/g": [
+      8.88,
+      172.32800000000026
+    ],
+    "senior_rec": [
+      1.0,
+      20.339999999999975
+    ],
+    "senior_tot": [
+      1.0,
+      22.0
+    ],
+    "senior_car": [
+      1.0,
+      146.74
+    ],
+    "senior_lng": [
+      0.0,
+      94.75999999999999
+    ],
+    "senior_100+": [
+      0.0,
+      4.739999999999995
+    ],
+    "senior_td": [
+      0.0,
+      20.0
+    ],
+    "junior_yds": [
+      5.0,
+      1340.45
+    ],
+    "junior_avg": [
+      2.0,
+      35.0
+    ],
+    "junior_#": [
+      1.0,
+      72.15000000000008
+    ],
+    "junior_y/g": [
+      6.0,
+      108.9
+    ],
+    "junior_rec": [
+      1.0,
+      18.600000000000023
+    ],
+    "junior_tot": [
+      1.0,
+      23.210000000000008
+    ],
+    "junior_car": [
+      1.0,
+      70.82000000000004
+    ],
+    "junior_lng": [
+      0.0,
+      68.0
+    ],
+    "junior_100+": [
+      0.0,
+      1.0
+    ],
+    "junior_td": [
+      0.0,
+      8.980000000000004
+    ],
+    "forty_yard_dash": [
+      4.4242,
+      5.001276641209121
+    ],
+    "vertical_jump": [
+      29.028333396110146,
+      37.43000000000001
+    ],
+    "shuttle": [
+      4.1371,
+      4.701276641209122
+    ],
+    "broad_jump": [
+      95.07083349027536,
+      133.86
+    ],
+    "bmi": [
+      20.040198567251462,
+      27.500015223386654
+    ],
+    "senior_tds": [
+      0.0,
+      17.150000000000034
+    ],
+    "senior_ypg": [
+      150.0,
+      150.0
+    ],
+    "junior_ypg": [
+      120.0,
+      120.0
+    ],
+    "trajectory": [
+      30.0,
+      30.0
+    ],
+    "state_talent_score": [
+      2.0,
+      4.0
+    ],
+    "games": [
+      8.0,
+      15.0
+    ],
+    "forty_yard_dash_imputed": [
+      0.0,
+      1.0
+    ],
+    "vertical_jump_imputed": [
+      0.0,
+      1.0
+    ],
+    "shuttle_imputed": [
+      0.0,
+      1.0
+    ],
+    "broad_jump_imputed": [
+      0.0,
+      1.0
+    ],
+    "rec_ypg": [
+      5.416666666666667,
+      131.62409090909097
+    ],
+    "ypg": [
+      0.0,
+      0.0
+    ],
+    "tds_game": [
+      0.0,
+      2.027499999999998
+    ],
+    "td_game": [
+      0.0,
+      0.0
+    ],
+    "all_purpose_game": [
+      0.0,
+      0.0
+    ],
+    "eff_ratio": [
+      0.0,
+      0.11433333257111135
+    ],
+    "ath_power": [
+      2759.7483277311685,
+      4909.315000000002
+    ],
+    "bmi_ypg": [
+      3006.0297850877196,
+      4125.002283507998
+    ],
+    "height_traj": [
+      2026.2,
+      2310.0
+    ],
+    "state_eff": [
+      0.0,
+      0.39999999733333336
+    ],
+    "speed_power_ratio": [
+      586.9149292909744,
+      1103.2166060187405
+    ],
+    "catch_radius": [
+      2053.6432041213475,
+      2792.0200000000004
+    ],
+    "speed_yac": [
+      -0.0031386971625161075,
+      13.433749999999993
+    ],
+    "combine_confidence": [
+      0.0,
+      1.0
+    ],
+    "trajectory_z": [
+      0.0,
+      0.0
+    ],
+    "pos_wr": [
+      1.0,
+      1.0
+    ],
+    "pos_qb": [
+      0.0,
+      0.0
+    ],
+    "pos_rb": [
+      0.0,
+      0.0
+    ],
+    "rule_score": [
+      25.511595563721812,
+      94.55426878120237
+    ]
+  },
+  "target_classes": [
+    "0",
+    "1",
+    "2",
+    "3"
+  ],
+  "model_params": {
+    "objective": "multi:softprob",
+    "use_label_encoder": null,
+    "base_score": null,
+    "booster": null,
+    "callbacks": null,
+    "colsample_bylevel": null,
+    "colsample_bynode": null,
+    "colsample_bytree": null,
+    "early_stopping_rounds": null,
+    "enable_categorical": false,
+    "eval_metric": null,
+    "feature_types": null,
+    "gamma": null,
+    "gpu_id": null,
+    "grow_policy": null,
+    "importance_type": null,
+    "interaction_constraints": null,
+    "learning_rate": 0.1,
+    "max_bin": null,
+    "max_cat_threshold": null,
+    "max_cat_to_onehot": null,
+    "max_delta_step": null,
+    "max_depth": 6,
+    "max_leaves": null,
+    "min_child_weight": null,
+    "missing": NaN,
+    "monotone_constraints": null,
+    "n_estimators": 100,
+    "n_jobs": -1,
+    "num_parallel_tree": null,
+    "predictor": null,
+    "random_state": 42,
+    "reg_alpha": null,
+    "reg_lambda": null,
+    "sampling_method": null,
+    "scale_pos_weight": null,
+    "subsample": null,
+    "tree_method": null,
+    "validate_parameters": null,
+    "verbosity": null
+  },
+  "model_version": "1.1.9",
+  "train_date": "2025-08-09T11:09:22.166562+00:00",
+  "notes": "Synapse parity WR pipeline v1.1.9",
+  "changelog_entry": [
+    "Synapse parity pipeline v1.1.9 for WR"
+  ],
+  "pipeline_config": {
+    "preprocessor_type": "RecruitRevealPreprocessor",
+    "model_type": "XGBoost",
+    "defensive_programming": true,
+    "production_ready": true
+  },
+  "api_compatibility": {
+    "fastapi": true,
+    "render_deployment": true,
+    "versioned": true
+  }
+}
