@@ -43,6 +43,7 @@ recruit_reveal_production_pipeline.py
 
 # Development notebooks (may contain sensitive data/experiments)
 *.ipynb
+!databricks-version.ipynb
 gitingore-eval-logic-test.ipynb
 .ipynb_checkpoints/
 
