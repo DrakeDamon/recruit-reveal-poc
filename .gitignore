@@ -45,3 +45,18 @@ tensorboard_logs/
 .env.*
 *.env
 !.env.example
+
+# Common Node.js artifacts
+node_modules
+.next
+.env.local
+.env.production
+.env.development
+
+# Python virtual environments
+.venv
+venv
+__pycache__
+*.pyc
+*.pyo
+EOF < /dev/null

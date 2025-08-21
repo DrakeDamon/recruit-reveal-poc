@@ -1,0 +1,25 @@
+version: "3.9"
+services:
+  backend:
+    build: ./recruit-reveal-backend
+    container_name: recruit-backend
+    environment:
+      - NODE_ENV=development
+    env_file:
+      - ./recruit-reveal-backend/.env
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./recruit-reveal-backend:/app
+      - /app/node_modules
+    
+  frontend:
+    build: ./recruit-reveal-frontend-next
+    container_name: recruit-frontend
+    environment:
+      - NEXT_PUBLIC_BACKEND_URL=http://localhost:3001
+      - NEXT_PUBLIC_API_BASE=http://localhost:3001
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
