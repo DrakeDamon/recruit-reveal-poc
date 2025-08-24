@@ -8,6 +8,7 @@ import html2canvas from 'html2canvas';
 import mixpanel from 'mixpanel-browser';
 import { recruitingCalendar } from '../../lib/calendar'; // Adjust the import path as needed
 import { useDarkMode } from './DarkModeContext';
+import DashboardWhatIfPanel from './DashboardWhatIfPanel';
 
 mixpanel.init('YOUR_TOKEN'); // optional analytics
 
@@ -280,29 +281,58 @@ export default function Dashboard({ evalData }: { evalData: EvalData | null }) {
           </Col>
         </Row>
 
-        {/* What If Simulation Results */}
-        {evalData!.what_if_results && (
-          <Card title="🎯 What If Simulation - Reach Next Division" className="mb-4">
-            <p className="text-sm text-gray-600 mb-4">
-              See exactly what improvements you need to reach the next division level
-            </p>
-            <Row gutter={[16, 16]}>
-              {Object.entries(evalData!.what_if_results).map(([stat, result]) => (
-                <Col xs={24} sm={12} md={8} key={stat}>
-                  <Card size="small" className="text-center">
-                    <div className="text-lg font-semibold text-blue-600">
-                      {result.to_next_div}
-                    </div>
-                    <div className="text-sm text-gray-600">{result.stat_label}</div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      → {result.next_div_name} ({Math.round(result.next_prob * 100)}% confidence)
-                    </div>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-          </Card>
-        )}
+        {/* Interactive What-If Analysis */}
+        <div className="mb-4">
+          <DashboardWhatIfPanel
+            position={evalData!.position || 'QB'}
+            currentDivision={evalData!.predicted_tier as any || 'D3/NAIA'}
+            baseValues={(() => {
+              const inputData = evalData!.explainability?.input_data || {};
+              // Map input field names to slider field names
+              const mappedData: Record<string, number> = {};
+              
+              // Common mappings for all positions
+              if (inputData.forty_yard_dash) mappedData.Forty_Yard_Dash = Number(inputData.forty_yard_dash);
+              if (inputData.vertical_jump) mappedData.Vertical_Jump = Number(inputData.vertical_jump);
+              
+              // Position-specific mappings
+              if (evalData!.position === 'RB') {
+                // For RB: map senior stats and calculate Senior_YPG from available data
+                if (inputData.senior_rush_yds && inputData.grad_year) {
+                  // Estimate games played (typically 12-14 games in senior year)
+                  const estimatedGames = 12;
+                  mappedData.Senior_YPG = Number(inputData.senior_rush_yds) / estimatedGames;
+                }
+                if (inputData.senior_rush_td) mappedData.Senior_TD = Number(inputData.senior_rush_td);
+              } else if (evalData!.position === 'QB') {
+                // For QB: map passing stats
+                if (inputData.senior_pass_yds) {
+                  const estimatedGames = 12;
+                  mappedData.Senior_YPG = Number(inputData.senior_pass_yds) / estimatedGames;
+                }
+                if (inputData.senior_pass_td) mappedData.Senior_TD_Passes = Number(inputData.senior_pass_td);
+              } else if (evalData!.position === 'WR') {
+                // For WR: map receiving stats  
+                if (inputData.senior_rec_yds) {
+                  const estimatedGames = 12;
+                  mappedData.Senior_YPG = Number(inputData.senior_rec_yds) / estimatedGames;
+                }
+                if (inputData.senior_rec_td) mappedData.Senior_TD = Number(inputData.senior_rec_td);
+              }
+              
+              console.log('🔍 Dashboard baseValues mapping:', {
+                inputData,
+                mappedData,
+                position: evalData!.position
+              });
+              
+              return mappedData;
+            })()}
+            onWhatIfResult={(result) => {
+              console.log('What-If result:', result);
+            }}
+          />
+        </div>
 
         {/* Progress Simulation Results */}
         {evalData!.progress_results && (

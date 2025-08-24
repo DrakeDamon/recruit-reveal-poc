@@ -1,6 +1,11 @@
 const { Router } = require('express');
 const { query, CAT, SCH } = require('../db/databricks');
 
+// Simple SQL string escaping for Databricks UDF calls
+function sqlString(str) {
+  return String(str).replace(/'/g, "''");
+}
+
 // Position → Serving URL
 const QB_URL = process.env.DATABRICKS_MODEL_QB_URL;
 const RB_URL = process.env.DATABRICKS_MODEL_RB_URL;
@@ -65,7 +70,7 @@ async function fetchSchemaOnce(pos) {
   const url = `${hostUrl.replace(/\/+$/, '')}/api/2.0/serving-endpoints/${ep}`;
   
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8000);
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
   
   try {
     const r = await fetch(url, { 
@@ -88,6 +93,80 @@ async function fetchSchemaOnce(pos) {
   }
 }
 
+// Map frontend field names to serving endpoint schema
+function mapFrontendFields(data, position) {
+  const mapped = { ...data };
+  
+  // Common mappings for all positions
+  if (data.player_name) mapped.Player_Name = data.player_name;
+  if (data.Player_Name === undefined && data.playerName) mapped.Player_Name = data.playerName;
+  if (data.state) mapped.State = data.state;
+  if (data.grad_year) mapped.Grad_year = data.grad_year;
+  if (data.height_inches) mapped.Height_Inches = data.height_inches;
+  if (data.weight_lbs) mapped.Weight_Lbs = data.weight_lbs;
+  if (data.forty_yard_dash) mapped.Forty_Yard_Dash = data.forty_yard_dash;
+  if (data.vertical_jump) mapped.Vertical_Jump = data.vertical_jump;
+  if (data.shuttle) mapped.Shuttle = data.shuttle;
+  if (data.broad_jump) mapped.Broad_Jump = data.broad_jump;
+  
+  // Position-specific mappings
+  if (position === 'RB') {
+    if (data.senior_rush_yds) mapped.Senior_Yds = data.senior_rush_yds;
+    if (data.senior_touches) mapped.Senior_Touches = data.senior_touches;
+    if (data.senior_avg) mapped.Senior_Avg = data.senior_avg;
+    if (data.senior_rush_rec) mapped.Senior_Rec = data.senior_rush_rec;
+    if (data.senior_rush_rec_yds) mapped.Senior_Rec_Yds = data.senior_rush_rec_yds;
+    if (data.senior_rush_td) mapped.Senior_TD = data.senior_rush_td;
+    if (data.junior_ypg) {
+      // Convert junior YPG back to total yards (assuming 10 games)
+      mapped.Junior_Yds = data.junior_ypg * 10;
+      mapped.Junior_YPG = data.junior_ypg;
+    }
+  }
+  
+  // Provide default values for required fields
+  const defaults = {
+    College: mapped.College || 'Unknown',
+    Division: mapped.Division || 'Unknown', 
+    High_School: mapped.High_School || 'Unknown',
+    State: mapped.State || 'TX',
+    MaxPreps_URL: mapped.MaxPreps_URL || '',
+    Scrape_Status: mapped.Scrape_Status || 'manual',
+    Match_Confidence: mapped.Match_Confidence || 'high',
+    Notes: mapped.Notes || ''
+  };
+  
+  // RB specific defaults
+  if (position === 'RB') {
+    Object.assign(defaults, {
+      Senior_Yds: mapped.Senior_Yds || 800,
+      Senior_Avg: mapped.Senior_Avg || 4.5,
+      Senior_Touches: mapped.Senior_Touches || 180,
+      Senior_YPG: mapped.Senior_YPG || (mapped.Senior_Yds ? mapped.Senior_Yds / 10 : 80),
+      Senior_Run: mapped.Senior_Run || (mapped.Senior_Touches || 180),
+      Senior_Tot: mapped.Senior_Tot || (mapped.Senior_Touches || 180),
+      Senior_Rec: mapped.Senior_Rec || 15,
+      Senior_Rec_Yds: mapped.Senior_Rec_Yds || 120,
+      Senior_Rec_Avg: mapped.Senior_Rec_Avg || 8.0,
+      Senior_Lng: mapped.Senior_Lng || 35,
+      Senior_TD: mapped.Senior_TD || 6,
+      Junior_Yds: mapped.Junior_Yds || 600,
+      Junior_Avg: mapped.Junior_Avg || 4.2,
+      Junior_Touches: mapped.Junior_Touches || 140,
+      Junior_YPG: mapped.Junior_YPG || 60,
+      Junior_Run: mapped.Junior_Run || 140,
+      Junior_Tot: mapped.Junior_Tot || 140,
+      Junior_Rec: mapped.Junior_Rec || 10,
+      Junior_Rec_Yds: mapped.Junior_Rec_Yds || 80,
+      Junior_Rec_Avg: mapped.Junior_Rec_Avg || 8.0,
+      Junior_Lng: mapped.Junior_Lng || 30,
+      Junior_TD: mapped.Junior_TD || 4
+    });
+  }
+  
+  return { ...defaults, ...mapped };
+}
+
 function padToSchema(rec, cols) {
   if (!cols) return rec;
   const out = { ...rec };
@@ -103,7 +182,7 @@ function clampToSlider(value, slider) {
 
 async function invokeServing(invocationsUrl, record) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+  const timeoutId = setTimeout(() => controller.abort(), 30000); // 8 second timeout
 
   try {
     const res = await fetch(invocationsUrl, {
@@ -119,12 +198,15 @@ async function invokeServing(invocationsUrl, record) {
     
     const text = await res.text();
     let data; try { data = JSON.parse(text); } catch { data = text; }
-    if (!res.ok) throw new Error(`Serving error: ${res.status} ${JSON.stringify(data)}`);
+    if (!res.ok) {
+      console.error(`[SERVING ERROR] ${res.status} from ${invocationsUrl}:`, data);
+      throw new Error(`Serving error: ${res.status} ${JSON.stringify(data)}`);
+    }
     return data;
   } catch (error) {
     clearTimeout(timeoutId);
     if (error.name === 'AbortError') {
-      throw new Error('Request timeout: Databricks serving endpoint did not respond within 8 seconds');
+      throw new Error('Request timeout: Databricks serving endpoint did not respond within 30 seconds');
     }
     throw error;
   }
@@ -173,22 +255,53 @@ router.get('/udfs', async (_req, res) => {
 router.post('/:pos', async (req, res) => {
   try {
     const pos = String(req.params.pos || '').toLowerCase();
+    console.log(`[PREDICT] ${pos.toUpperCase()} evaluation request received:`, JSON.stringify(req.body, null, 2));
+    
     if (!['qb', 'rb', 'wr'].includes(pos)) {
       return res.status(400).json({ error: "pos must be one of 'qb','rb','wr'" });
     }
-    const udf = UDFS[pos];
-    const payload = JSON.stringify(req.body || {});
-    const sql = `SELECT ${udf}('${sqlString(payload)}') AS json`;
 
-    const [row] = await query(sql);
-    const raw = row?.json || row?.JSON || Object.values(row || {})[0];
+    // Use serving endpoints instead of UDFs
+    const invUrl = endpointForPos(pos.toUpperCase());
+    if (!invUrl) {
+      return res.status(400).json({ error: 'No serving endpoint configured for position' });
+    }
 
-    let out;
-    try { out = JSON.parse(raw); }
-    catch { return res.status(502).json({ error: 'Bad UDF output', raw }); }
+    console.log(`[PREDICT] Using serving endpoint: ${invUrl}`);
+    const schema = await fetchSchemaOnce(pos.toUpperCase());
+    const mappedData = mapFrontendFields(req.body || {}, pos.toUpperCase());
+    const record = padToSchema(mappedData, schema);
 
-    return res.json({ position: pos.toUpperCase(), ...out });
+    const data = await invokeServing(invUrl, record);
+    const decoded = decodePrediction(data);
+
+    // Build response in expected format
+    const response = {
+      position: pos.toUpperCase(),
+      predicted_tier: ID2DIV[decoded.classId] || 'Unknown',
+      predicted_division: ID2DIV[decoded.classId] || 'Unknown',
+      probability: decoded.probs ? Math.max(...decoded.probs) : 0.5,
+      confidence_score: decoded.probs ? Math.max(...decoded.probs) : 0.5,
+      score: Math.round((decoded.probs ? Math.max(...decoded.probs) : 0.5) * 100),
+      performance_score: Math.round((decoded.probs ? Math.max(...decoded.probs) : 0.5) * 60),
+      combine_score: Math.round((decoded.probs ? Math.max(...decoded.probs) : 0.5) * 25),
+      upside_score: Math.round((decoded.probs ? Math.max(...decoded.probs) : 0.5) * 15),
+      goals: [
+        `Improve performance for ${ID2DIV[decoded.classId]} level`,
+        'Focus on position-specific skills development',
+        'Maintain academic eligibility'
+      ],
+      notes: `${pos.toUpperCase()} evaluation showing potential for ${ID2DIV[decoded.classId]} level play`,
+      playerName: req.body?.Player_Name || 'Unknown Player',
+      explainability: {
+        input_data: req.body || {},
+        prediction_probabilities: decoded.probs
+      }
+    };
+
+    return res.json(response);
   } catch (e) {
+    console.error('[PREDICT] Error:', e.message);
     res.status(500).json({ error: e.message });
   }
 });

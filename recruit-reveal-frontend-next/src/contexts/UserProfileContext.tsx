@@ -46,7 +46,7 @@ export function UserProfileProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
-      const response = await fetch(`http://localhost:3001/api/profile/get?email=${session.user.email}`);
+      const response = await fetch(`/api/profile/get?email=${session.user.email}`);
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -75,7 +75,7 @@ export function UserProfileProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const response = await fetch('http://localhost:3001/api/profile/update', {
+      const response = await fetch(`/api/profile/update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

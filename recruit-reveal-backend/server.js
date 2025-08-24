@@ -4,7 +4,7 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-const ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:3000';
+const ORIGIN = process.env.CORS_ORIGIN || ['http://localhost:3000', 'http://localhost:3002', 'http://localhost:3003'];
 
 // Boot logging
 console.log('[BOOT] server.js loaded at', new Date().toISOString());
@@ -14,6 +14,13 @@ app.use(cors({ origin: ORIGIN, credentials: true }));
 app.use(express.json({ limit: '1mb' }));
 
 console.log('[BOOT] predict require path:', require.resolve('./src/routes/predict'));
+
+// Log serving endpoint URLs at startup
+console.log('[Predict URLs]',
+  'QB:', process.env.DATABRICKS_MODEL_QB_URL,
+  'RB:', process.env.DATABRICKS_MODEL_RB_URL, 
+  'WR:', process.env.DATABRICKS_MODEL_WR_URL
+);
 
 // Log every request that starts with /api/predict
 app.use('/api/predict', (req, _res, next) => {
@@ -28,6 +35,9 @@ app.get('/api/predict/__inline', (_req, res) => res.json({ ok: true, inline: tru
 
 app.use('/api/meta', require('./src/routes/meta'));
 app.use('/api/predict', require('./src/routes/predict'));
+app.use('/api/profile', require('./src/routes/profile'));
+app.use('/api/eval', require('./src/routes/eval'));
+app.use('/api', require('./src/routes/auth'));
 
 // Route inspector
 app.get('/__routes', (req, res) => {
